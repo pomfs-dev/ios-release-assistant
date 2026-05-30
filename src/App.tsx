@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { scanFolder } from "./api/scanFolder";
 import { actionViews } from "./data/actionViews";
 import { releaseSteps } from "./data/releaseSteps";
 import { ActionPreview } from "./components/ActionPreview";
@@ -9,12 +10,21 @@ import { SidebarProgress } from "./components/SidebarProgress";
 import { StartPanel } from "./components/StartPanel";
 import { StoreConnectPanel } from "./components/StoreConnectPanel";
 import { TopBar } from "./components/TopBar";
+import type { FolderScanState } from "./types";
+
+const defaultFolderPath = import.meta.env.VITE_DEFAULT_APP_PATH ?? "/Users/me/MyVibeApp";
 
 export default function App() {
   const [activeStepId, setActiveStepId] = useState(releaseSteps[0].id);
   const [activeActionKey, setActiveActionKey] = useState(releaseSteps[0].actionKey);
   const [showNotes, setShowNotes] = useState(false);
   const [advancedMode, setAdvancedMode] = useState(false);
+  const [folderPath, setFolderPath] = useState(defaultFolderPath);
+  const [scanState, setScanState] = useState<FolderScanState>({
+    status: "idle",
+    result: null,
+    error: null,
+  });
 
   const activeStep = useMemo(
     () => releaseSteps.find((step) => step.id === activeStepId) ?? releaseSteps[0],
@@ -23,11 +33,30 @@ export default function App() {
   const activeAction = actionViews[activeActionKey] ?? actionViews["load-folder"];
   const completedCount = releaseSteps.filter((step) => step.status === "done").length;
   const reviewCount = releaseSteps.filter((step) => step.status === "warning").length;
+  const scannedFolder = scanState.status === "success" ? scanState.result.folder : null;
+
+  async function handleScanFolder() {
+    setActiveActionKey("load-folder");
+    setScanState({ status: "loading", result: null, error: null });
+
+    try {
+      const result = await scanFolder(folderPath);
+      setScanState({ status: "success", result, error: null });
+    } catch (error) {
+      setScanState({
+        status: "error",
+        result: null,
+        error: error instanceof Error ? error.message : "앱 폴더를 읽지 못했습니다.",
+      });
+    }
+  }
 
   return (
     <main className="app">
       <TopBar
         advancedMode={advancedMode}
+        folderName={scannedFolder?.name ?? "MyVibeApp"}
+        folderPath={scannedFolder?.path ?? folderPath}
         onToggleAdvanced={setAdvancedMode}
         onOpenNotes={() => setShowNotes(true)}
       />
@@ -46,7 +75,13 @@ export default function App() {
         />
 
         <section className="workspace">
-          <StartPanel onAction={setActiveActionKey} />
+          <StartPanel
+            folderPath={folderPath}
+            scanState={scanState}
+            onAction={setActiveActionKey}
+            onFolderPathChange={setFolderPath}
+            onScanFolder={handleScanFolder}
+          />
           <ActionPreview action={activeAction} />
           <StoreConnectPanel onAction={setActiveActionKey} />
           <SetupWizard

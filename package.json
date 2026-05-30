@@ -6,14 +6,16 @@
   "description": "Beginner-friendly iOS release setup assistant for Xcode, XcodeGen, and App Store Connect.",
   "license": "MIT",
   "scripts": {
-    "dev": "vite",
+    "dev": "node server/local-server.mjs",
+    "dev:vite": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "lucide-react": "^0.555.0",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.1",

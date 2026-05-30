@@ -56,3 +56,52 @@ export type ActionView = {
   mock: [string, string][];
   footer: string;
 };
+
+export type FolderScanChecklistItem = {
+  status: "found" | "warning" | "missing";
+  title: string;
+  copy: string;
+};
+
+export type FolderScanResult = {
+  ok: true;
+  folder: {
+    name: string;
+    path: string;
+  };
+  files: {
+    projectSpec: null | {
+      name: string;
+      relativePath: string;
+      absolutePath: string;
+    };
+    xcodeProjects: Array<{ name: string; relativePath: string; absolutePath: string }>;
+    workspaces: Array<{ name: string; relativePath: string; absolutePath: string }>;
+    infoPlists: Array<{ name: string; relativePath: string; absolutePath: string }>;
+    entitlements: Array<{ name: string; relativePath: string; absolutePath: string }>;
+    assetCatalogs: Array<{ name: string; relativePath: string; absolutePath: string }>;
+  };
+  project: null | {
+    name: string | null;
+    targetCount: number;
+    targets: Array<{
+      name: string;
+      type: string | null;
+      platform: string | null;
+      deploymentTarget: string | null;
+      bundleId: string | null;
+      developmentTeam: string | null;
+      entitlements: string | null;
+      sourceCount: number;
+      resourceCount: number;
+    }>;
+  };
+  projectParseError: string | null;
+  checklist: FolderScanChecklistItem[];
+};
+
+export type FolderScanState =
+  | { status: "idle"; result: null; error: null }
+  | { status: "loading"; result: null; error: null }
+  | { status: "success"; result: FolderScanResult; error: null }
+  | { status: "error"; result: null; error: string };

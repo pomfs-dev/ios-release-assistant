@@ -1,8 +1,56 @@
+import type { FolderScanState } from "../types";
+
 type StartPanelProps = {
+  folderPath: string;
+  scanState: FolderScanState;
   onAction: (actionKey: string) => void;
+  onFolderPathChange: (path: string) => void;
+  onScanFolder: () => void;
 };
 
-export function StartPanel({ onAction }: StartPanelProps) {
+function scanStatusLabel(scanState: FolderScanState) {
+  if (scanState.status === "loading") return "읽는 중";
+  if (scanState.status === "success") return "읽기 완료";
+  if (scanState.status === "error") return "오류";
+  return "대기 중";
+}
+
+function scanRows(scanState: FolderScanState) {
+  if (scanState.status === "success") {
+    const target = scanState.result.project?.targets[0];
+    return [
+      ["앱 이름", scanState.result.project?.name ?? scanState.result.folder.name, "found"],
+      ["앱 고유 주소", target?.bundleId ?? "project.yml에서 확인 필요", "found"],
+      [
+        "Xcode 프로젝트",
+        scanState.result.files.xcodeProjects[0]?.relativePath ?? ".xcodeproj 없음",
+        scanState.result.files.xcodeProjects.length > 0 ? "found" : "warn",
+      ],
+      [
+        "개인정보 준비",
+        scanState.result.files.infoPlists.length > 0
+          ? `${scanState.result.files.infoPlists.length}개 Info.plist 후보`
+          : "Info.plist 확인 필요",
+        scanState.result.files.infoPlists.length > 0 ? "found" : "warn",
+      ],
+    ] as const;
+  }
+
+  return [
+    ["앱 이름", "P.O.MFS", "found"],
+    ["앱 고유 주소", "com.prideofmisfits.community", "found"],
+    ["Apple 기능", "Apple 로그인, 링크 열기, 알림 사용 중", "found"],
+    ["개인정보 준비", "개인정보 처리방침 주소 확인 필요", "warn"],
+  ] as const;
+}
+
+export function StartPanel({
+  folderPath,
+  scanState,
+  onAction,
+  onFolderPathChange,
+  onScanFolder,
+}: StartPanelProps) {
   return (
     <article className="launch-panel">
       <div className="launch-head">
@@ -29,12 +77,21 @@ export function StartPanel({ onAction }: StartPanelProps) {
             상태를 읽습니다.
           </p>
           <div className="button-stack">
+            <label className="folder-path-field">
+              <span>앱 폴더 경로</span>
+              <input
+                value={folderPath}
+                onChange={(event) => onFolderPathChange(event.target.value)}
+                spellCheck={false}
+              />
+            </label>
             <button
               type="button"
               className="wide-button primary-soft"
-              onClick={() => onAction("load-folder")}
+              disabled={scanState.status === "loading"}
+              onClick={onScanFolder}
             >
-              기존 앱 폴더 불러오기
+              {scanState.status === "loading" ? "앱 폴더 읽는 중..." : "기존 앱 폴더 불러오기"}
             </button>
             <button type="button" className="wide-button" onClick={() => onAction("load-settings")}>
               설정 파일만 불러오기
@@ -48,39 +105,19 @@ export function StartPanel({ onAction }: StartPanelProps) {
         <section className="setup-card">
           <div className="setup-icon">2</div>
           <h3>불러온 앱에서 찾은 정보</h3>
+          <div className={`scan-status ${scanState.status}`}>{scanStatusLabel(scanState)}</div>
+          {scanState.status === "error" ? <div className="safe-note error">{scanState.error}</div> : null}
           <div className="found-list">
-            <div className="found-row">
-              <span className="found-dot">✓</span>
-              <span>
-                <strong>앱 이름</strong>
-                <br />
-                P.O.MFS
-              </span>
-            </div>
-            <div className="found-row">
-              <span className="found-dot">✓</span>
-              <span>
-                <strong>앱 고유 주소</strong>
-                <br />
-                com.prideofmisfits.community
-              </span>
-            </div>
-            <div className="found-row">
-              <span className="found-dot">✓</span>
-              <span>
-                <strong>Apple 기능</strong>
-                <br />
-                Apple 로그인, 링크 열기, 알림 사용 중
-              </span>
-            </div>
-            <div className="found-row warn">
-              <span className="found-dot">!</span>
-              <span>
-                <strong>개인정보 준비</strong>
-                <br />
-                개인정보 처리방침 주소 확인 필요
-              </span>
-            </div>
+            {scanRows(scanState).map(([title, copy, status]) => (
+              <div className={`found-row ${status === "warn" ? "warn" : ""}`} key={title}>
+                <span className="found-dot">{status === "warn" ? "!" : "✓"}</span>
+                <span>
+                  <strong>{title}</strong>
+                  <br />
+                  {copy}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
 

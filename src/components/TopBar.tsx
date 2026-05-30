@@ -1,10 +1,18 @@
 type TopBarProps = {
   advancedMode: boolean;
+  folderName: string;
+  folderPath: string;
   onToggleAdvanced: (enabled: boolean) => void;
   onOpenNotes: () => void;
 };
 
-export function TopBar({ advancedMode, onToggleAdvanced, onOpenNotes }: TopBarProps) {
+export function TopBar({
+  advancedMode,
+  folderName,
+  folderPath,
+  onToggleAdvanced,
+  onOpenNotes,
+}: TopBarProps) {
   return (
     <header className="topbar">
       <div className="brand">
@@ -15,9 +23,9 @@ export function TopBar({ advancedMode, onToggleAdvanced, onOpenNotes }: TopBarPr
         </div>
       </div>
 
-      <div className="project-pill" title="/Users/me/MyVibeApp">
-        <strong>MyVibeApp</strong>
-        <span className="project-path">현재 앱 폴더: /Users/me/MyVibeApp</span>
+      <div className="project-pill" title={folderPath}>
+        <strong>{folderName}</strong>
+        <span className="project-path">현재 앱 폴더: {folderPath}</span>
       </div>
 
       <div className="top-actions">

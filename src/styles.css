@@ -1252,6 +1252,27 @@ pre {
   gap: 8px;
 }
 
+.folder-path-field {
+  display: grid;
+  gap: 6px;
+}
+
+.folder-path-field span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.folder-path-field input {
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: white;
+  color: var(--ink);
+  font-size: 12px;
+}
+
 .wide-button {
   min-height: 40px;
   border-radius: 8px;
@@ -1334,6 +1355,40 @@ pre {
   padding: 10px;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.safe-note.error {
+  color: var(--red);
+  background: var(--red-soft);
+  border-color: #f1b5b1;
+}
+
+.scan-status {
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: var(--muted);
+  background: white;
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.scan-status.success {
+  color: var(--green);
+  border-color: #bee2d3;
+  background: var(--green-soft);
+}
+
+.scan-status.error {
+  color: var(--red);
+  border-color: #f1b5b1;
+  background: var(--red-soft);
+}
+
+.wide-button:disabled {
+  opacity: 0.62;
+  cursor: wait;
 }
 
 .action-preview-title {

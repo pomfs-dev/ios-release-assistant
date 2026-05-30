@@ -19,7 +19,7 @@ Repository: https://github.com/pomfs-dev/ios-release-assistant
 
 This project is currently being drafted inside the POMFS iOS app repository under `ios-release-assistant/`, and is also published as a standalone GitHub repository at `pomfs-dev/ios-release-assistant`.
 
-The current implementation is a Vite + React + TypeScript app that ports the original HTML prototype into modular components and typed setup data. File generation and App Store Connect calls are not wired yet.
+The current implementation is a Vite + React + TypeScript app with a local Node server. The first local API can scan an iOS app folder and report the XcodeGen spec, Xcode project, workspace, Info.plist, entitlements, and asset catalogs it finds. File generation and App Store Connect calls are not wired yet.
 
 ## Local Development
 
@@ -28,15 +28,25 @@ npm install
 npm run dev
 ```
 
+Optional local default app path:
+
+```bash
+cp .env.example .env
+```
+
+The local development server serves both the React app and local-only APIs:
+
+- `GET /api/health`
+- `POST /api/scan-folder` with `{ "path": "/path/to/ios-app" }`
+
 Build check:
 
 ```bash
 npm run build
 ```
 
-## Documentation
+## Prototype
 
-- [Product Plan](docs/product-plan.md)
 - [HTML Prototype](prototypes/ios-release-assistant-mockup.html)
 
 ## License
