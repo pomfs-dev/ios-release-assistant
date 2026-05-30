@@ -14,7 +14,7 @@ iOS Release Assistant는 Xcode를 처음 쓰는 사용자가 바이브 코딩으
 4. App Store Connect API 연결은 MVP에 포함합니다.
 5. 오픈소스 라이선스는 MIT License로 확정합니다.
 6. 초기 개발은 POMFS iOS 앱 저장소 안의 `ios-release-assistant/` 폴더에서 진행합니다.
-7. 공개 배포는 별도 GitHub 저장소 `ios-release-assistant`를 만들어 저장합니다.
+7. 공개 배포는 별도 GitHub 저장소 `pomfs-dev/ios-release-assistant`에 저장합니다.
 
 ## 왜 만드는가
 
@@ -302,7 +302,7 @@ GitHub 공개 전 필요한 파일:
 
 - 현재 작업 위치는 POMFS iOS 앱 저장소의 `ios-release-assistant/` 폴더입니다.
 - 이 폴더는 나중에 별도 GitHub 저장소로 분리할 수 있도록 독립 프로젝트 구조를 유지합니다.
-- 공개용 새 저장소 이름은 `ios-release-assistant`를 기본값으로 사용합니다.
+- 공개용 새 저장소는 `https://github.com/pomfs-dev/ios-release-assistant`입니다.
 - 공개 전에는 POMFS 앱 고유 정보, 개인 계정 정보, Apple API Key, 실제 인증 정보가 포함되지 않았는지 확인합니다.
 
 ## 참고할 공식 문서
@@ -326,6 +326,4 @@ GitHub 공개 전 필요한 파일:
 1. 온라인판에서 App Store Connect API Key를 서버로 전달할지, 브라우저 세션에서만 처리할지 결정합니다.
 2. 온라인판에서 앱 소스 압축 업로드를 허용할지, 로컬 설치판 연결만 허용할지 결정합니다.
 3. 범용 iOS 앱 지원 범위를 XcodeGen 프로젝트부터 시작할지, 기존 `.xcodeproj` 역분석까지 MVP에 포함할지 결정합니다.
-4. GitHub 새 저장소를 어느 계정 또는 조직에 만들지 결정합니다.
-5. GitHub 새 저장소를 public으로 만들지 private으로 먼저 만들지 결정합니다.
-6. 로컬 설치 명령을 `npm` 기반으로 제공할지, 패키지된 데스크톱 앱까지 제공할지 결정합니다.
+4. 로컬 설치 명령을 `npm` 기반으로 제공할지, 패키지된 데스크톱 앱까지 제공할지 결정합니다.

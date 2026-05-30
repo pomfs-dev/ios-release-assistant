@@ -4,6 +4,8 @@ iOS Release Assistant is an open-source tool for people who are new to Xcode and
 
 The goal is to turn difficult Xcode and App Store Connect setup work into beginner-friendly questions, then safely generate or update the project configuration needed for release.
 
+Repository: https://github.com/pomfs-dev/ios-release-assistant
+
 ## Product Direction
 
 - Beginner-first setup assistant for iOS release preparation
@@ -15,9 +17,7 @@ The goal is to turn difficult Xcode and App Store Connect setup work into beginn
 
 ## Current Status
 
-This project is currently being drafted inside the POMFS iOS app repository under `ios-release-assistant/`.
-
-The plan is to move or push this folder to a separate GitHub repository named `ios-release-assistant` when the initial structure is ready.
+This project is currently being drafted inside the POMFS iOS app repository under `ios-release-assistant/`, and is also published as a standalone GitHub repository at `pomfs-dev/ios-release-assistant`.
 
 ## Documentation
 
