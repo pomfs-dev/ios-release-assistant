@@ -1,24 +1,26 @@
-import { ChevronRight } from "lucide-react";
 import type { ActionView } from "../types";
 
 export function ActionPreview({ action }: { action: ActionView }) {
   return (
     <article className="action-preview">
-      <div className="action-main">
-        <div className="panel-heading">
-          <p className="eyebrow">{action.eyebrow}</p>
-          <span className="mini-tag">{action.tag}</span>
+      <div className="action-preview-head">
+        <div>
+          <div className="eyebrow">{action.eyebrow}</div>
+          <div className="action-preview-title">{action.title}</div>
+          <div className="action-preview-copy">{action.copy}</div>
         </div>
-        <h2>{action.title}</h2>
-        <p>{action.copy}</p>
+        <span className="mini-tag">{action.tag}</span>
+      </div>
 
+      <div className="action-preview-body">
+        <div className="action-main">
         <div className="action-steps">
           {action.steps.map(([title, copy], index) => (
             <div className="action-step" key={title}>
-              <span>{index + 1}</span>
+              <span className="action-step-num">{index + 1}</span>
               <div>
                 <strong>{title}</strong>
-                <small>{copy}</small>
+                <span>{copy}</span>
               </div>
             </div>
           ))}
@@ -26,21 +28,25 @@ export function ActionPreview({ action }: { action: ActionView }) {
       </div>
 
       <aside className="action-side">
-        <h3>{action.sideTitle}</h3>
+          <div className="action-side-title">{action.sideTitle}</div>
         <p>{action.sideCopy}</p>
-        <div className="mock-list">
+          <div className="mock-box">
           {action.mock.map(([label, value]) => (
-            <div key={label}>
+              <div className="mock-row" key={label}>
               <span>{label}</span>
               <strong>{value}</strong>
             </div>
           ))}
         </div>
-        <footer>
-          <ChevronRight size={15} />
-          {action.footer}
-        </footer>
       </aside>
+      </div>
+
+      <div className="action-preview-footer">
+        <span>{action.footer}</span>
+        <button type="button" className="secondary">
+          미리보기 초기화
+        </button>
+      </div>
     </article>
   );
 }

@@ -18,11 +18,11 @@ function FieldRenderer({ field }: { field: FieldDefinition }) {
         {field.choices?.map((choice) => (
           <button
             type="button"
-            className={`choice-card ${choice.active ? "active" : ""}`}
+            className={`choice ${choice.active ? "active" : ""}`}
             key={choice.title}
           >
-            <strong>{choice.title}</strong>
-            <span>{choice.copy}</span>
+            <div className="choice-title">{choice.title}</div>
+            <div className="choice-copy">{choice.copy}</div>
           </button>
         ))}
       </div>
@@ -42,7 +42,7 @@ function FieldRenderer({ field }: { field: FieldDefinition }) {
     return (
       <label className="field">
         <span>{field.label}</span>
-        <select defaultValue={field.options?.[0]}>
+        <select className="select" defaultValue={field.options?.[0]}>
           {field.options?.map((option) => (
             <option key={option}>{option}</option>
           ))}
@@ -55,8 +55,8 @@ function FieldRenderer({ field }: { field: FieldDefinition }) {
     <label className="field">
       <span>{field.label}</span>
       <div className="input-row">
-        <input defaultValue={field.value} placeholder={field.placeholder} />
-        {field.helper ? <em>{field.helper}</em> : null}
+        <input className="text-input" defaultValue={field.value} placeholder={field.placeholder} />
+        {field.helper ? <em className="suffix">{field.helper}</em> : null}
       </div>
     </label>
   );
@@ -64,17 +64,17 @@ function FieldRenderer({ field }: { field: FieldDefinition }) {
 
 export function SetupWizard({ advancedMode, step, onAction }: SetupWizardProps) {
   return (
-    <article className="wizard-panel">
-      <div className="wizard-top">
+    <article className="question-panel">
+      <div className="question-top">
         <div>
-          <p className="eyebrow">{step.eyebrow}</p>
-          <h2>{step.heading}</h2>
-          <p>{step.helper}</p>
+          <div className="eyebrow">{step.eyebrow}</div>
+          <h1>{step.heading}</h1>
+          <div className="helper">{step.helper}</div>
         </div>
         <span className="risk-badge">{step.badge}</span>
       </div>
 
-      <div className="wizard-body">
+      <div className="question-body">
         <section className="field-stack">
           {step.fields.map((field, index) => (
             <FieldRenderer field={field} key={`${step.id}-${field.kind}-${index}`} />
@@ -82,11 +82,11 @@ export function SetupWizard({ advancedMode, step, onAction }: SetupWizardProps) 
         </section>
 
         <aside className="explain-box">
-          <h3>이 설정이 의미하는 것</h3>
+          <div className="explain-title">이 설정이 의미하는 것</div>
           <p>{step.explain}</p>
-          <div className="target-list">
+          <div className="write-targets">
             {step.targets.map(([label, value]) => (
-              <div key={label}>
+              <div className="target-line" key={label}>
                 <span>{label}</span>
                 <code>{value}</code>
               </div>
@@ -96,16 +96,23 @@ export function SetupWizard({ advancedMode, step, onAction }: SetupWizardProps) 
       </div>
 
       {advancedMode ? (
-        <section className="advanced-panel">
-          <div>
+        <section className="advanced">
+          <div className="advanced-head">
+            <div>
+              <div className="advanced-title">자세히 보기: 실제 파일에는 이렇게 기록됩니다</div>
+              <div className="advanced-subtitle">
+                쉬운 질문에 답하면 아래처럼 Xcode용 설정 파일에 안전하게 변환됩니다.
+              </div>
+            </div>
             <Code2 size={18} />
-            <strong>자세히 보기: 실제 파일에는 이렇게 기록됩니다</strong>
           </div>
-          <pre>{step.changePreview}</pre>
+          <div className="table-wrap">
+            <pre>{step.changePreview}</pre>
+          </div>
         </section>
       ) : null}
 
-      <footer className="wizard-footer">
+      <footer className="panel-footer">
         <button type="button" className="secondary">
           <ArrowLeft size={16} />
           이전

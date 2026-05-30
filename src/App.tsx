@@ -7,6 +7,7 @@ import { InspectorPreview } from "./components/InspectorPreview";
 import { SetupWizard } from "./components/SetupWizard";
 import { SidebarProgress } from "./components/SidebarProgress";
 import { StartPanel } from "./components/StartPanel";
+import { StoreConnectPanel } from "./components/StoreConnectPanel";
 import { TopBar } from "./components/TopBar";
 
 export default function App() {
@@ -24,14 +25,14 @@ export default function App() {
   const reviewCount = releaseSteps.filter((step) => step.status === "warning").length;
 
   return (
-    <main className="app-shell">
+    <main className="app">
       <TopBar
         advancedMode={advancedMode}
         onToggleAdvanced={setAdvancedMode}
         onOpenNotes={() => setShowNotes(true)}
       />
 
-      <section className="workspace">
+      <section className="shell">
         <SidebarProgress
           activeStepId={activeStep.id}
           completedCount={completedCount}
@@ -44,9 +45,10 @@ export default function App() {
           }}
         />
 
-        <section className="main-column">
+        <section className="workspace">
           <StartPanel onAction={setActiveActionKey} />
           <ActionPreview action={activeAction} />
+          <StoreConnectPanel onAction={setActiveActionKey} />
           <SetupWizard
             advancedMode={advancedMode}
             step={activeStep}
@@ -58,7 +60,7 @@ export default function App() {
       </section>
 
       <section className="generate-bar">
-        <div>
+        <div className="generate-copy">
           <strong>2개 항목만 더 확인하면 Xcode에서 열 프로젝트 파일을 만들 수 있습니다.</strong>
           <span>
             로컬 설치판에서는 백업을 만든 뒤 XcodeGen을 실행합니다. 온라인판에서는 설정 파일 작성과
