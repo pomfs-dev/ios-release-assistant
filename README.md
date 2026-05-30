@@ -19,6 +19,21 @@ Repository: https://github.com/pomfs-dev/ios-release-assistant
 
 This project is currently being drafted inside the POMFS iOS app repository under `ios-release-assistant/`, and is also published as a standalone GitHub repository at `pomfs-dev/ios-release-assistant`.
 
+The current implementation is a Vite + React + TypeScript app that ports the original HTML prototype into modular components and typed setup data. File generation and App Store Connect calls are not wired yet.
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Build check:
+
+```bash
+npm run build
+```
+
 ## Documentation
 
 - [Product Plan](docs/product-plan.md)
