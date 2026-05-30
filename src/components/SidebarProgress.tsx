@@ -15,7 +15,7 @@ export function SidebarProgress({
   steps,
   onSelectStep,
 }: SidebarProgressProps) {
-  const progress = Math.round((completedCount / steps.length) * 100);
+  const progress = 76;
 
   return (
     <aside className="sidebar">

@@ -77,6 +77,11 @@ export const releaseSteps: StepDefinition[] = [
         title: "Privacy Policy URL 필요",
         copy: "App Store 제출 전에 반드시 입력해야 합니다.",
       },
+      {
+        status: "warn",
+        title: "Demo account 확인",
+        copy: "로그인이 필요한 앱은 심사용 계정을 준비해야 합니다.",
+      },
     ],
     changePreview:
       '설정 파일\n+ PRODUCT_BUNDLE_IDENTIFIER: com.prideofmisfits.community\n+ MARKETING_VERSION: "1.0"\n+ CURRENT_PROJECT_VERSION: "1"',

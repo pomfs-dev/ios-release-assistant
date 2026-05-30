@@ -12,7 +12,7 @@ import { TopBar } from "./components/TopBar";
 
 export default function App() {
   const [activeStepId, setActiveStepId] = useState(releaseSteps[0].id);
-  const [activeActionKey, setActiveActionKey] = useState("load-folder");
+  const [activeActionKey, setActiveActionKey] = useState(releaseSteps[0].actionKey);
   const [showNotes, setShowNotes] = useState(false);
   const [advancedMode, setAdvancedMode] = useState(false);
 
@@ -63,8 +63,8 @@ export default function App() {
         <div className="generate-copy">
           <strong>2개 항목만 더 확인하면 Xcode에서 열 프로젝트 파일을 만들 수 있습니다.</strong>
           <span>
-            로컬 설치판에서는 백업을 만든 뒤 XcodeGen을 실행합니다. 온라인판에서는 설정 파일 작성과
-            App Store Connect 점검을 먼저 제공합니다.
+            버튼을 누르면 현재 앱 폴더를 안전하게 확인한 뒤 Xcode용 프로젝트 파일을 만들고,
+            무엇이 바뀌었는지 쉬운 말로 보여줍니다. GitHub 계정은 필요하지 않습니다.
           </span>
         </div>
         <button type="button" className="secondary" onClick={() => setActiveActionKey("preflight")}>

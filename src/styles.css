@@ -1013,12 +1013,20 @@ pre {
   gap: 18px;
   padding: 18px;
   min-height: 0;
+  align-items: start;
 }
 
 .sidebar,
 .workspace,
 .inspector {
   min-width: 0;
+}
+
+.inspector {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  align-self: start;
 }
 
 .sidebar {
