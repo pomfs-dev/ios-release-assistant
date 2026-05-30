@@ -1,0 +1,2893 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iOS Release Assistant Mockup</title>
+  <style>
+    :root {
+      --ink: #18201d;
+      --muted: #66706b;
+      --faint: #8b9691;
+      --paper: #f7f8f5;
+      --panel: #ffffff;
+      --line: #d9ded8;
+      --line-strong: #bdc6bf;
+      --black: #101513;
+      --blue: #2457d6;
+      --blue-soft: #e8eefc;
+      --green: #167454;
+      --green-soft: #e5f4ee;
+      --amber: #a56312;
+      --amber-soft: #fff1d8;
+      --red: #b3322b;
+      --red-soft: #ffe9e7;
+      --violet: #6750a4;
+      --shadow: 0 22px 70px rgba(24, 32, 29, 0.12);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(16, 21, 19, 0.035) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16, 21, 19, 0.035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 66px 1fr;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 22px;
+      background: rgba(247, 248, 245, 0.9);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 280px;
+    }
+
+    .mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 7px;
+      background: var(--black);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 15px;
+      box-shadow: 6px 6px 0 var(--green);
+    }
+
+    .brand-title {
+      font-weight: 780;
+      line-height: 1.05;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .project-pill {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      box-shadow: 0 1px 0 rgba(16, 21, 19, 0.04);
+    }
+
+    .project-pill strong {
+      white-space: nowrap;
+    }
+
+    .project-path {
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 8px 11px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--green);
+    }
+
+    .mode-toggle {
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .mode-toggle button {
+      padding: 7px 10px;
+      border-radius: 6px;
+      color: var(--muted);
+      background: transparent;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .mode-toggle button.active {
+      background: var(--black);
+      color: white;
+    }
+
+    .note-button {
+      min-height: 38px;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .note-button:hover {
+      background: #f1f4f0;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 276px minmax(520px, 1fr) 370px;
+      gap: 18px;
+      padding: 18px;
+      min-height: 0;
+    }
+
+    .sidebar,
+    .workspace,
+    .inspector {
+      min-width: 0;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      align-self: start;
+    }
+
+    .side-head {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #f6f8f5);
+    }
+
+    .side-title {
+      font-weight: 760;
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: #e7ece7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 76%;
+      background: linear-gradient(90deg, var(--green), var(--blue));
+    }
+
+    .readiness {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .steps {
+      padding: 8px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .step {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 10px;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .step:hover {
+      background: #f1f4f0;
+    }
+
+    .step.active {
+      background: var(--blue-soft);
+      outline: 1px solid #c7d5ff;
+    }
+
+    .step-number {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      background: #eef1ed;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .step.active .step-number {
+      background: var(--blue);
+      color: white;
+    }
+
+    .step-name {
+      font-size: 14px;
+      font-weight: 680;
+      line-height: 1.2;
+    }
+
+    .step-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .step-state {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      background: var(--line-strong);
+    }
+
+    .step.done .step-state {
+      background: var(--green);
+    }
+
+    .step.warn .step-state {
+      background: var(--amber);
+    }
+
+    .workspace {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .question-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .question-top {
+      padding: 20px 22px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 8px 0 0;
+      font-size: 30px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.58;
+      margin-top: 10px;
+      max-width: 740px;
+    }
+
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      background: var(--amber-soft);
+      color: var(--amber);
+      border: 1px solid #efcf99;
+      font-size: 13px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .question-body {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 245px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .field-stack {
+      display: grid;
+      gap: 15px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 770;
+      color: var(--ink);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .text-input,
+    .select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #fcfdfb;
+      color: var(--ink);
+      padding: 12px 13px;
+      min-height: 44px;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 94px;
+      line-height: 1.55;
+    }
+
+    .text-input:focus,
+    .select:focus,
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.12);
+    }
+
+    .suffix {
+      min-width: 112px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f4f6f2;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 0 10px;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 88px;
+      background: #fbfcfa;
+      text-align: left;
+    }
+
+    .choice.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      box-shadow: inset 0 0 0 1px rgba(36, 87, 214, 0.18);
+    }
+
+    .choice-title {
+      font-weight: 770;
+      font-size: 14px;
+    }
+
+    .choice-copy {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.42;
+      margin-top: 6px;
+    }
+
+    .explain-box {
+      border: 1px solid var(--line);
+      background: #f8faf7;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .explain-title {
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .explain-box p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .write-targets {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .target-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: 12px;
+      color: #233e86;
+      background: #edf2ff;
+      border: 1px solid #d8e2ff;
+      padding: 2px 5px;
+      border-radius: 5px;
+    }
+
+    .assistant-note {
+      border-left: 4px solid var(--green);
+      background: var(--green-soft);
+      padding: 13px 14px;
+      border-radius: 0 8px 8px 0;
+      color: #244c3d;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .launch-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .launch-head {
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: start;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #f7f9f5);
+    }
+
+    .launch-title {
+      font-size: 21px;
+      font-weight: 840;
+      line-height: 1.22;
+      margin-top: 5px;
+    }
+
+    .launch-copy {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+      margin-top: 7px;
+      max-width: 780px;
+    }
+
+    .launch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .setup-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+      padding: 15px;
+      display: grid;
+      gap: 12px;
+      min-height: 236px;
+      align-content: start;
+    }
+
+    .setup-card.emphasis {
+      border-color: #b8c8ff;
+      background: linear-gradient(180deg, #f7f9ff, #fbfcfa);
+    }
+
+    .setup-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--black);
+      color: white;
+      font-weight: 900;
+      font-size: 17px;
+    }
+
+    .setup-card h3 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .setup-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.52;
+      font-size: 13px;
+    }
+
+    .button-stack {
+      display: grid;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .wide-button {
+      min-height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 12px;
+      font-weight: 760;
+      text-align: left;
+    }
+
+    .wide-button.primary-soft {
+      border-color: #c7d5ff;
+      background: var(--blue-soft);
+      color: #1d449f;
+    }
+
+    .found-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .found-row {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 8px;
+      align-items: start;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .found-row strong {
+      color: var(--ink);
+    }
+
+    .found-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+      background: var(--green);
+      margin-top: 1px;
+    }
+
+    .found-row.warn .found-dot {
+      background: var(--amber);
+    }
+
+    .connect-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: white;
+      display: grid;
+      gap: 8px;
+    }
+
+    .connect-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .connect-row strong {
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .safe-note {
+      color: #244c3d;
+      background: var(--green-soft);
+      border: 1px solid #bee2d3;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .action-preview {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .action-preview-head {
+      padding: 17px 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: start;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #f7f9f5);
+    }
+
+    .action-preview-title {
+      font-size: 20px;
+      font-weight: 840;
+      line-height: 1.24;
+      margin-top: 5px;
+    }
+
+    .action-preview-copy {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.52;
+      margin-top: 7px;
+      max-width: 780px;
+    }
+
+    .action-preview-body {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 12px;
+    }
+
+    .action-main {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .action-steps {
+      display: grid;
+      gap: 8px;
+    }
+
+    .action-step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+    }
+
+    .action-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      background: var(--blue-soft);
+      color: #1d449f;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .action-step strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+    .action-step span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .action-side {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8faf7;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .action-side-title {
+      font-weight: 820;
+      font-size: 14px;
+    }
+
+    .action-side p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .mock-box {
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: white;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .mock-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding-top: 7px;
+    }
+
+    .mock-row:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .mock-row strong {
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .action-preview-footer {
+      padding: 13px 14px;
+      border-top: 1px solid var(--line);
+      background: #fafbf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-preview-footer span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .store-connect-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .store-connect-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: start;
+      background: #fbfcfa;
+    }
+
+    .store-connect-title {
+      font-weight: 840;
+      font-size: 21px;
+      line-height: 1.24;
+      margin-top: 5px;
+    }
+
+    .store-connect-copy {
+      color: var(--muted);
+      line-height: 1.52;
+      font-size: 14px;
+      margin-top: 7px;
+      max-width: 800px;
+    }
+
+    .store-connect-grid {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .store-task {
+      border: 1px solid var(--line);
+      background: #fbfcfa;
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .store-task-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .store-task.warn .store-task-icon {
+      background: var(--amber);
+    }
+
+    .store-task.todo .store-task-icon {
+      background: var(--line-strong);
+    }
+
+    .store-task h3 {
+      margin: 1px 0 4px;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    .store-task p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.48;
+      font-size: 12px;
+    }
+
+    .store-task .mini-tag {
+      align-self: start;
+    }
+
+    .store-connect-footer {
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      background: #fafbf8;
+    }
+
+    .store-connect-footer p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .panel-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding: 15px 22px;
+      background: #fafbf8;
+    }
+
+    .secondary,
+    .primary,
+    .danger {
+      min-height: 42px;
+      border-radius: 8px;
+      padding: 0 15px;
+      font-weight: 780;
+      white-space: nowrap;
+    }
+
+    .secondary {
+      background: var(--panel);
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+    }
+
+    .primary {
+      background: var(--black);
+      color: white;
+      box-shadow: 0 8px 18px rgba(16, 21, 19, 0.2);
+    }
+
+    .danger {
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1px solid #f1b5b1;
+    }
+
+    .advanced {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .advanced-head {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .advanced-title {
+      font-weight: 800;
+    }
+
+    .advanced-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      background: #fafbf8;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    td strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .inspector {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .preview-panel,
+    .check-panel,
+    .diff-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-title {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .mini-tag {
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 8px;
+      background: #fbfcfa;
+      white-space: nowrap;
+    }
+
+    .phone-wrap {
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #f9fbf8, #edf2ec);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .phone {
+      width: 188px;
+      height: 384px;
+      border: 8px solid #111513;
+      border-radius: 34px;
+      background: #fefefe;
+      box-shadow: 0 18px 36px rgba(16, 21, 19, 0.22);
+      padding: 12px;
+      position: relative;
+    }
+
+    .phone:before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      transform: translateX(-50%);
+      width: 64px;
+      height: 18px;
+      background: #111513;
+      border-radius: 0 0 13px 13px;
+    }
+
+    .phone-screen {
+      height: 100%;
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(36, 87, 214, 0.1), transparent 28%),
+        #f6f7f4;
+      padding: 42px 12px 12px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .app-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #111513, #2457d6 58%, #167454);
+      box-shadow: 0 8px 16px rgba(16, 21, 19, 0.22);
+    }
+
+    .phone-name {
+      font-weight: 780;
+      font-size: 13px;
+    }
+
+    .permission-alert {
+      background: white;
+      border: 1px solid #d7ddd6;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 10px 22px rgba(16, 21, 19, 0.12);
+    }
+
+    .permission-alert strong {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .permission-alert p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .store-preview {
+      padding: 15px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .store-line {
+      display: grid;
+      grid-template-columns: 98px 1fr;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .store-line span:first-child {
+      color: var(--muted);
+    }
+
+    .checklist {
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 9px;
+      padding: 9px;
+      border-radius: 8px;
+      background: #fbfcfa;
+      border: 1px solid var(--line);
+    }
+
+    .check-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+      background: var(--green);
+    }
+
+    .check.warn .check-icon {
+      background: var(--amber);
+    }
+
+    .check.error .check-icon {
+      background: var(--red);
+    }
+
+    .check strong {
+      font-size: 13px;
+    }
+
+    .check p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .diff-panel pre {
+      margin: 0;
+      padding: 14px 16px;
+      white-space: pre-wrap;
+      color: #304139;
+      background: #fbfcfa;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow: auto;
+      max-height: 210px;
+    }
+
+    .generate-bar {
+      position: sticky;
+      bottom: 0;
+      grid-column: 1 / -1;
+      background: rgba(247, 248, 245, 0.92);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 16px 48px rgba(16, 21, 19, 0.16);
+      z-index: 4;
+    }
+
+    .generate-copy {
+      min-width: 0;
+    }
+
+    .generate-copy strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .generate-copy span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(16, 21, 19, 0.38);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal {
+      width: min(920px, 100%);
+      max-height: min(760px, calc(100vh - 44px));
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 28px 90px rgba(16, 21, 19, 0.28);
+    }
+
+    .modal-head {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 18px;
+      background: linear-gradient(180deg, #ffffff, #f7f9f5);
+    }
+
+    .modal-head h2 {
+      margin: 7px 0 0;
+      font-size: 26px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .modal-close {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .modal-body {
+      overflow: auto;
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .note-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+      padding: 15px;
+    }
+
+    .note-card.full {
+      grid-column: 1 / -1;
+    }
+
+    .note-card h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .note-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.58;
+    }
+
+    .note-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.62;
+    }
+
+    .note-meta {
+      display: grid;
+      gap: 8px;
+    }
+
+    .note-meta-row {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 10px;
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    .note-meta-row:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .note-meta-row span:first-child {
+      color: var(--muted);
+    }
+
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: #fafbf8;
+    }
+
+    .modal-footer span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1180px) {
+      .shell {
+        grid-template-columns: 240px minmax(0, 1fr);
+      }
+
+      .inspector {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .phone {
+        width: 160px;
+        height: 322px;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .topbar {
+        height: auto;
+        min-height: 66px;
+        flex-wrap: wrap;
+        padding: 12px;
+      }
+
+      .brand,
+      .project-pill {
+        min-width: 100%;
+      }
+
+      .shell {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      .question-body {
+        grid-template-columns: 1fr;
+      }
+
+      .choice-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .launch-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .store-connect-grid,
+      .store-connect-footer,
+      .action-preview-body {
+        grid-template-columns: 1fr;
+      }
+
+      .inspector {
+        grid-template-columns: 1fr;
+      }
+
+      .generate-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .note-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .note-meta-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">iOS</div>
+        <div>
+          <div class="brand-title">Release Assistant</div>
+          <div class="brand-subtitle">앱 출시 전 설정을 대신 정리해주는 쉬운 도우미</div>
+        </div>
+      </div>
+
+      <div class="project-pill" title="/Users/me/MyVibeApp">
+        <strong>MyVibeApp</strong>
+        <span class="project-path">현재 앱 폴더: /Users/me/MyVibeApp</span>
+      </div>
+
+      <div class="top-actions">
+        <span class="status-chip"><span class="dot"></span> 로컬 변경 없음</span>
+        <button class="note-button" id="openNotes">만든 이야기</button>
+        <div class="mode-toggle" aria-label="mode">
+          <button class="active" id="beginnerMode">쉬운 설정</button>
+          <button id="advancedMode">자세히</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="shell">
+      <aside class="sidebar">
+        <div class="side-head">
+          <div class="side-title">출시 준비 진행률</div>
+          <div class="progress-track"><div class="progress-fill"></div></div>
+          <div class="readiness">
+            <span>76% 완료</span>
+            <span>2개 확인 필요</span>
+          </div>
+        </div>
+
+        <div class="steps">
+          <button class="step done active" data-step="basic">
+            <span class="step-number">1</span>
+            <span>
+              <span class="step-name">앱 기본 정보</span>
+              <span class="step-meta">이름, 앱 고유 주소, 버전</span>
+            </span>
+            <span class="step-state"></span>
+          </button>
+          <button class="step done" data-step="signing">
+            <span class="step-number">2</span>
+            <span>
+              <span class="step-name">서명과 배포</span>
+              <span class="step-meta">Apple 계정, 배포 준비</span>
+            </span>
+            <span class="step-state"></span>
+          </button>
+          <button class="step warn" data-step="privacy">
+            <span class="step-number">3</span>
+            <span>
+              <span class="step-name">권한과 개인정보</span>
+              <span class="step-meta">권한 문구, 개인정보</span>
+            </span>
+            <span class="step-state"></span>
+          </button>
+          <button class="step done" data-step="capabilities">
+            <span class="step-number">4</span>
+            <span>
+              <span class="step-name">Apple 기능</span>
+              <span class="step-meta">Push, Apple Login, Domains</span>
+            </span>
+            <span class="step-state"></span>
+          </button>
+          <button class="step warn" data-step="store">
+            <span class="step-number">5</span>
+            <span>
+              <span class="step-name">App Store 심사</span>
+              <span class="step-meta">상품 정보, 심사 메모, 데모 계정</span>
+            </span>
+            <span class="step-state"></span>
+          </button>
+          <button class="step" data-step="generate">
+            <span class="step-number">6</span>
+            <span>
+              <span class="step-name">프로젝트 만들기</span>
+              <span class="step-meta">Xcode에서 열 파일 생성</span>
+            </span>
+            <span class="step-state"></span>
+          </button>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <article class="launch-panel">
+          <div class="launch-head">
+            <div>
+              <div class="eyebrow">Start</div>
+              <div class="launch-title">앱 폴더를 불러오면 출시 준비 상태를 먼저 읽어드릴게요.</div>
+              <div class="launch-copy">
+                새 앱을 시작할 수도 있고, 이미 바이브 코딩으로 만든 앱 폴더를 불러올 수도 있습니다.
+                Apple 정보 연결은 선택 사항이며, 연결하지 않아도 기본 설정 도우미는 사용할 수 있습니다.
+              </div>
+            </div>
+            <span class="mini-tag">첫 화면 시안</span>
+          </div>
+
+          <div class="launch-grid">
+            <section class="setup-card emphasis">
+              <div class="setup-icon">1</div>
+              <h3>시작 방법 선택</h3>
+              <p>개발 지식이 없어도 괜찮습니다. 앱 폴더만 선택하면 필요한 파일을 찾아서 현재 상태를 읽습니다.</p>
+              <div class="button-stack">
+                <button class="wide-button primary-soft" data-action="load-folder">기존 앱 폴더 불러오기</button>
+                <button class="wide-button" data-action="load-settings">설정 파일만 불러오기</button>
+                <button class="wide-button" data-action="new-app">새 앱 설정 만들기</button>
+              </div>
+            </section>
+
+            <section class="setup-card">
+              <div class="setup-icon">2</div>
+              <h3>불러온 앱에서 찾은 정보</h3>
+              <div class="found-list">
+                <div class="found-row">
+                  <span class="found-dot">✓</span>
+                  <span><strong>앱 이름</strong><br>P.O.MFS</span>
+                </div>
+                <div class="found-row">
+                  <span class="found-dot">✓</span>
+                  <span><strong>앱 고유 주소</strong><br>com.prideofmisfits.community</span>
+                </div>
+                <div class="found-row">
+                  <span class="found-dot">✓</span>
+                  <span><strong>Apple 기능</strong><br>Apple 로그인, 링크 열기, 알림 사용 중</span>
+                </div>
+                <div class="found-row warn">
+                  <span class="found-dot">!</span>
+                  <span><strong>개인정보 준비</strong><br>개인정보 처리방침 주소 확인 필요</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="setup-card">
+              <div class="setup-icon">3</div>
+              <h3>Apple 정보 연결</h3>
+              <p>선택 사항입니다. 연결하면 App Store에 등록된 앱 정보와 현재 앱 설정이 같은지 비교해줍니다.</p>
+              <div class="connect-box">
+                <div class="connect-row"><span>연결 상태</span><strong>연결 안 됨</strong></div>
+                <div class="connect-row"><span>필요한 것</span><strong>Apple API Key</strong></div>
+                <div class="connect-row"><span>비밀번호 입력</span><strong>요구하지 않음</strong></div>
+              </div>
+              <button class="wide-button primary-soft" data-action="apple-connect">Apple 정보 연결하기</button>
+              <div class="safe-note">Apple ID 비밀번호를 입력받지 않습니다. 연결하지 않아도 앱 폴더 분석과 프로젝트 만들기는 가능합니다.</div>
+            </section>
+          </div>
+        </article>
+
+        <article class="action-preview" id="actionPreview">
+          <div class="action-preview-head">
+            <div>
+              <div class="eyebrow" id="actionEyebrow">Next Action</div>
+              <div class="action-preview-title" id="actionTitle">버튼을 누르면 다음 화면이 여기에서 미리 보입니다.</div>
+              <div class="action-preview-copy" id="actionCopy">
+                실제 제품에서는 파일 선택, Apple 정보 연결, 제출 준비 항목 작성, 미리 점검, 프로젝트 만들기 같은 다음 액션이 이 영역에 표시됩니다.
+              </div>
+            </div>
+            <span class="mini-tag" id="actionTag">시안</span>
+          </div>
+          <div class="action-preview-body">
+            <div class="action-main">
+              <div class="action-steps" id="actionSteps">
+                <div class="action-step">
+                  <span class="action-step-num">1</span>
+                  <div>
+                    <strong>원하는 버튼을 눌러보세요</strong>
+                    <span>각 버튼이 어떤 다음 화면으로 이어질지 시안으로 확인할 수 있습니다.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <aside class="action-side">
+              <div class="action-side-title" id="actionSideTitle">왕초보용 설명</div>
+              <p id="actionSideCopy">
+                이 도구는 전문 설정 이름보다 “무엇을 준비해야 하는지”를 먼저 보여줍니다.
+              </p>
+              <div class="mock-box" id="actionMock">
+                <div class="mock-row"><span>화면 상태</span><strong>대기 중</strong></div>
+                <div class="mock-row"><span>실제 실행</span><strong>아직 없음</strong></div>
+              </div>
+            </aside>
+          </div>
+          <div class="action-preview-footer">
+            <span id="actionFooter">실제 제품에서는 여기에서 파일 선택창, 연결 안내, 점검 결과, 생성 로그가 이어집니다.</span>
+            <button class="secondary" data-action="reset-action">미리보기 초기화</button>
+          </div>
+        </article>
+
+        <article class="store-connect-panel">
+          <div class="store-connect-head">
+            <div>
+              <div class="eyebrow">App Store Connect</div>
+              <div class="store-connect-title">앱스토어에 올릴 상품 정보와 심사 정보를 같이 준비합니다.</div>
+              <div class="store-connect-copy">
+                Xcode 프로젝트 파일은 앱을 빌드하기 위한 준비이고, App Store Connect 정보는 앱스토어 상품 페이지와 심사 제출을 위한 준비입니다.
+                이 도구는 둘을 따로 보지 않고 출시 전 체크리스트로 함께 관리합니다.
+              </div>
+            </div>
+            <span class="mini-tag">제출 준비</span>
+          </div>
+
+          <div class="store-connect-grid">
+            <section class="store-task">
+              <span class="store-task-icon">✓</span>
+              <div>
+                <h3>앱스토어 기본 정보</h3>
+                <p>앱 이름, 부제, 앱 고유 주소, 카테고리, 고객지원 주소를 준비합니다.</p>
+              </div>
+              <span class="mini-tag">완료</span>
+            </section>
+
+            <section class="store-task warn">
+              <span class="store-task-icon">!</span>
+              <div>
+                <h3>개인정보와 처리방침</h3>
+                <p>개인정보 처리방침 주소, 수집하는 데이터 종류, 사용자 선택 안내 주소를 확인합니다.</p>
+              </div>
+              <span class="mini-tag">확인 필요</span>
+            </section>
+
+            <section class="store-task todo">
+              <span class="store-task-icon">·</span>
+              <div>
+                <h3>스크린샷과 앱 미리보기</h3>
+                <p>iPhone/iPad 스크린샷, 선택 사항인 앱 미리보기 영상을 제출 형식에 맞게 준비합니다.</p>
+              </div>
+              <span class="mini-tag">준비 전</span>
+            </section>
+
+            <section class="store-task warn">
+              <span class="store-task-icon">!</span>
+              <div>
+                <h3>심사용 정보</h3>
+                <p>로그인이 필요한 앱이면 심사용 계정, 연락처, 심사자에게 남길 설명을 준비합니다.</p>
+              </div>
+              <span class="mini-tag">확인 필요</span>
+            </section>
+
+            <section class="store-task todo">
+              <span class="store-task-icon">·</span>
+              <div>
+                <h3>가격과 출시 국가</h3>
+                <p>무료/유료 여부, 출시 국가, 예약 주문 여부, 수동 출시 여부를 선택합니다.</p>
+              </div>
+              <span class="mini-tag">선택 전</span>
+            </section>
+
+            <section class="store-task todo">
+              <span class="store-task-icon">·</span>
+              <div>
+                <h3>업로드할 빌드 선택</h3>
+                <p>Xcode에서 Archive 후 올린 빌드를 App Store Connect에서 선택해 심사에 제출합니다.</p>
+              </div>
+              <span class="mini-tag">나중에</span>
+            </section>
+          </div>
+
+          <div class="store-connect-footer">
+            <p>
+              Apple 정보를 연결하면 App Store에 이미 만든 앱 기록을 읽어와 현재 앱 설정과 비교합니다.
+              연결하지 않아도 빈칸 체크리스트와 작성 가이드는 사용할 수 있습니다.
+            </p>
+            <button class="secondary" data-action="store-items">App Store 제출 항목 열기</button>
+          </div>
+        </article>
+
+        <article class="question-panel">
+          <div class="question-top">
+            <div>
+              <div class="eyebrow" id="sectionEyebrow">General</div>
+              <h1 id="questionTitle">앱의 이름과 고유 ID를 확인할게요.</h1>
+              <div class="helper" id="questionHelper">
+                이 단계는 사용자가 보는 앱 이름과 App Store에 등록할 앱의 고유 주소를 정합니다.
+                한 번 출시하면 바꾸기 어려운 값이라 처음에 안전하게 정하는 것이 중요합니다.
+              </div>
+            </div>
+            <div class="risk-badge" id="riskBadge">출시 영향 높음</div>
+          </div>
+
+          <div class="question-body">
+            <div class="field-stack" id="questionFields">
+              <div class="field">
+                <label for="appName">앱 이름</label>
+                <input id="appName" class="text-input" value="P.O.MFS" aria-label="앱 이름">
+              </div>
+
+              <div class="field">
+                <label for="bundle">앱 고유 주소</label>
+                <div class="input-row">
+                  <input id="bundle" class="text-input" value="com.prideofmisfits.community" aria-label="앱 고유 주소">
+                  <div class="suffix">예: com.company.app</div>
+                </div>
+              </div>
+
+              <div class="choice-grid">
+                <button class="choice active">
+                  <div class="choice-title">iPhone + iPad</div>
+                  <div class="choice-copy">대부분의 새 앱에 적합합니다. App Store에서 범용 앱처럼 보입니다.</div>
+                </button>
+                <button class="choice">
+                  <div class="choice-title">iPhone only</div>
+                  <div class="choice-copy">iPhone 화면만 준비된 앱이면 안전한 선택입니다.</div>
+                </button>
+                <button class="choice">
+                  <div class="choice-title">Mac Catalyst 포함</div>
+                  <div class="choice-copy">iPad 앱을 Mac에서도 배포할 때 사용합니다.</div>
+                </button>
+              </div>
+
+              <div class="assistant-note">
+                앱 고유 주소는 App Store에 앱을 등록할 때 쓰는 ID와 반드시 같아야 합니다.
+                첫 빌드를 올린 뒤에는 바꾸기 어렵기 때문에 회사나 서비스 이름을 넣은 형식을 추천합니다.
+              </div>
+            </div>
+
+            <aside class="explain-box">
+              <div class="explain-title">이 설정이 의미하는 것</div>
+              <p id="explainCopy">
+                앱 이름은 홈 화면과 App Store 제품 페이지에서 보입니다.
+                앱 고유 주소는 사용자에게 직접 보이지 않지만, iPhone과 App Store가 이 앱을 구분하는 내부 ID입니다.
+              </p>
+              <div class="write-targets" id="targetLines">
+                <div class="target-line"><span>저장 위치</span><code>설정 파일</code></div>
+                <div class="target-line"><span>Xcode 탭</span><code>General</code></div>
+                <div class="target-line"><span>App Store</span><code>앱 정보</code></div>
+              </div>
+            </aside>
+          </div>
+
+          <div class="panel-footer">
+            <button class="secondary" id="backButton" data-action="previous-question">이전</button>
+            <div>
+              <button class="secondary" data-action="skip-question">질문 건너뛰기</button>
+              <button class="primary" id="nextButton" data-action="next-question">다음 설정</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="advanced hidden" id="advancedPanel">
+          <div class="advanced-head">
+            <div>
+              <div class="advanced-title">자세히 보기: 실제 파일에는 이렇게 기록됩니다</div>
+              <div class="advanced-subtitle">쉬운 질문에 답하면 아래처럼 Xcode용 설정 파일에 안전하게 변환됩니다.</div>
+            </div>
+            <button class="secondary" data-action="config-preview">설정 파일 미리보기</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>내가 정한 항목</th>
+                  <th>현재 값</th>
+                  <th>파일</th>
+                  <th>쉬운 설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>앱 고유 주소</strong>전문 이름: PRODUCT_BUNDLE_IDENTIFIER</td>
+                  <td><code>com.prideofmisfits.community</code></td>
+                  <td><code>설정 파일</code></td>
+                  <td>App Store에 등록하는 앱 ID와 같아야 합니다.</td>
+                </tr>
+                <tr>
+                  <td><strong>Apple 개발자 팀</strong>전문 이름: DEVELOPMENT_TEAM</td>
+                  <td><code>LT47CYB8SL</code></td>
+                  <td><code>설정 파일</code></td>
+                  <td>어떤 Apple 계정으로 앱을 배포할지 정합니다.</td>
+                </tr>
+                <tr>
+                  <td><strong>카메라 권한 문구</strong>전문 이름: NSCameraUsageDescription</td>
+                  <td><code>프로필 사진 촬영에 사용됩니다.</code></td>
+                  <td><code>앱 정보 파일</code></td>
+                  <td>카메라 권한 팝업에 그대로 표시되는 문구입니다.</td>
+                </tr>
+                <tr>
+                  <td><strong>Apple 로그인 사용</strong>전문 이름: com.apple.developer.applesignin</td>
+                  <td><code>Default</code></td>
+                  <td><code>권한 파일</code></td>
+                  <td>Sign in with Apple 버튼을 네이티브 기능으로 사용할 수 있게 합니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <aside class="inspector">
+        <article class="preview-panel">
+          <div class="panel-title">
+            <span>사용자가 보게 되는 위치</span>
+            <span class="mini-tag">미리보기</span>
+          </div>
+          <div class="phone-wrap">
+            <div class="phone" aria-label="iPhone preview">
+              <div class="phone-screen">
+                <div class="app-icon"></div>
+                <div class="phone-name" id="phoneName">P.O.MFS</div>
+                <div class="permission-alert">
+                  <strong id="permissionTitle">"P.O.MFS"에서 카메라에 접근하려고 합니다</strong>
+                  <p id="permissionText">프로필 사진을 촬영하기 위해 카메라 접근이 필요합니다.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="store-preview" id="storePreview">
+            <div class="store-line"><span>App Store 이름</span><strong>P.O.MFS</strong></div>
+            <div class="store-line"><span>앱 고유 주소</span><strong>com.prideofmisfits.community</strong></div>
+            <div class="store-line"><span>버전</span><strong>1.0 · build 1</strong></div>
+          </div>
+        </article>
+
+        <article class="check-panel">
+          <div class="panel-title">
+            <span>심사 준비 체크</span>
+            <span class="mini-tag" id="checkStatus">2개 확인 필요</span>
+          </div>
+          <div class="checklist" id="reviewChecklist">
+            <div class="check">
+              <div class="check-icon">✓</div>
+              <div>
+                <strong>앱 고유 주소 설정됨</strong>
+                <p>App Store에 앱을 등록할 때 입력하는 ID와 맞춰야 합니다.</p>
+              </div>
+            </div>
+            <div class="check">
+              <div class="check-icon">✓</div>
+              <div>
+                <strong>Apple 기능 권한 연결됨</strong>
+                <p>Apple Login, Associated Domains가 파일에 반영됩니다.</p>
+              </div>
+            </div>
+            <div class="check warn">
+              <div class="check-icon">!</div>
+              <div>
+                <strong>Privacy Policy URL 필요</strong>
+                <p>App Store 제출 전에 반드시 입력해야 합니다.</p>
+              </div>
+            </div>
+            <div class="check warn">
+              <div class="check-icon">!</div>
+              <div>
+                <strong>Demo account 확인</strong>
+                <p>로그인이 필요한 앱은 심사용 계정을 준비해야 합니다.</p>
+              </div>
+            </div>
+            <div class="check warn">
+              <div class="check-icon">!</div>
+              <div>
+                <strong>Apple 등록 정보 비교 선택 가능</strong>
+                <p>Apple 정보를 연결하면 App Store에 만든 앱 기록과 현재 앱 설정이 같은지 확인합니다.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="diff-panel">
+          <div class="panel-title">
+            <span>변경 미리보기</span>
+            <span class="mini-tag">미리보기</span>
+          </div>
+          <pre id="changePreview">설정 파일
++ PRODUCT_BUNDLE_IDENTIFIER: com.prideofmisfits.community
++ DEVELOPMENT_TEAM: LT47CYB8SL
++ MARKETING_VERSION: "1.0"
+
+앱 정보 파일
++ NSCameraUsageDescription
++ NSLocationWhenInUseUsageDescription
+
+Apple 기능 권한 파일
++ com.apple.developer.applesignin</pre>
+        </article>
+      </aside>
+
+      <div class="generate-bar">
+        <div class="generate-copy">
+          <strong>2개 항목만 더 확인하면 Xcode에서 열 프로젝트 파일을 만들 수 있습니다.</strong>
+          <span>버튼을 누르면 현재 앱 폴더를 안전하게 확인한 뒤 Xcode용 프로젝트 파일을 만들고, 무엇이 바뀌었는지 쉬운 말로 보여줍니다. GitHub 계정은 필요하지 않습니다.</span>
+        </div>
+        <button class="secondary" data-action="preflight">미리 점검</button>
+        <button class="primary" data-action="generate-project">Xcode 프로젝트 만들기</button>
+      </div>
+    </section>
+  </main>
+
+  <section class="modal-backdrop hidden" id="notesModal" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
+    <article class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">About This Tool</div>
+          <h2 id="notesTitle">이 도구를 만드는 이유</h2>
+          <div class="helper">
+            개발 언어를 몰라도, 바이브 코딩으로 만든 iOS 앱을 App Store 제출 준비 상태까지 데려가기 위한 설정 도우미입니다.
+          </div>
+        </div>
+        <button class="modal-close" id="closeNotes" aria-label="만든 이야기 닫기">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="note-grid">
+          <section class="note-card full">
+            <h3>배경</h3>
+            <p>
+              앱을 만드는 일은 쉬워졌지만, 앱을 App Store에 올리기 전 설정은 여전히 어렵습니다.
+              Xcode에는 낯선 단어가 많고, 어떤 값이 실제 앱의 어디에 보이는지 알기 힘듭니다.
+              이 도구는 어려운 설정 이름을 먼저 보여주지 않고, 쉬운 질문에 답하면 출시 준비에 필요한 파일을 정리해주는 것을 목표로 합니다.
+            </p>
+          </section>
+
+          <section class="note-card">
+            <h3>누구를 위한 것인가요?</h3>
+            <ul>
+              <li>Xcode를 처음 열어본 앱 제작자</li>
+              <li>개발 언어를 모르지만 바이브 코딩으로 앱을 만든 사람</li>
+              <li>App Store 제출 전에 무엇을 준비해야 하는지 알고 싶은 사람</li>
+              <li>복잡한 설정 파일을 직접 만지기 무서운 사용자</li>
+            </ul>
+          </section>
+
+          <section class="note-card">
+            <h3>무엇을 도와주나요?</h3>
+            <ul>
+              <li>앱 이름, 고유 주소, 버전 설정</li>
+              <li>카메라/위치/마이크 권한 문구 준비</li>
+              <li>Apple 로그인, 푸시 알림 같은 기능 설정</li>
+              <li>개인정보와 심사 준비 항목 점검</li>
+              <li>App Store 상품 정보, 스크린샷, 가격, 출시 국가 준비</li>
+              <li>마지막에 Xcode에서 열 수 있는 프로젝트 파일 생성</li>
+            </ul>
+          </section>
+
+          <section class="note-card">
+            <h3>어떻게 동작하나요?</h3>
+            <ul>
+              <li>사용자는 브라우저 화면에서 질문에 답합니다.</li>
+              <li>앱 폴더 안의 설정 파일을 안전하게 수정합니다.</li>
+              <li>XcodeGen이라는 도구로 Xcode 프로젝트 파일을 만듭니다.</li>
+              <li>무엇이 바뀌었는지 쉬운 말로 보여줍니다.</li>
+              <li>개발자용 자세한 정보는 접어서 보여줍니다.</li>
+            </ul>
+          </section>
+
+          <section class="note-card">
+            <h3>GitHub가 필요한가요?</h3>
+            <p>
+              필요하지 않습니다. 이 도구는 사용자의 Mac 안에 있는 앱 폴더를 기준으로 동작해야 합니다.
+              GitHub 계정이나 원격 저장소가 없어도 사용할 수 있어야 합니다.
+              Git을 모르는 사용자를 위해서는 자동 백업 폴더를 만든 뒤 진행하는 모드가 필요합니다.
+            </p>
+          </section>
+
+          <section class="note-card full">
+            <h3>프로젝트 정보</h3>
+            <div class="note-meta">
+              <div class="note-meta-row">
+                <span>프로젝트 이름</span>
+                <strong>iOS Release Assistant</strong>
+              </div>
+              <div class="note-meta-row">
+                <span>만든 사람</span>
+                <strong>Maintainer 이름 입력 예정</strong>
+              </div>
+              <div class="note-meta-row">
+                <span>라이선스</span>
+                <strong>MIT License 권장, 최종 결정 필요</strong>
+              </div>
+              <div class="note-meta-row">
+                <span>오픈소스 목표</span>
+                <strong>개발 언어를 몰라도 iOS 앱 출시 준비를 안전하게 마치도록 돕기</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span>실제 제품에서는 이 화면을 사용자 도움말, 오픈소스 소개, 업데이트 기록과 연결할 수 있습니다.</span>
+        <button class="primary" id="closeNotesFooter">확인</button>
+      </div>
+    </article>
+  </section>
+
+  <script>
+    const steps = {
+      basic: {
+        eyebrow: "General",
+        title: "앱의 이름과 고유 ID를 확인할게요.",
+        helper: "이 단계는 사용자가 보는 앱 이름과 App Store에 등록할 앱의 고유 주소를 정합니다. 한 번 출시하면 바꾸기 어려운 값이라 처음에 안전하게 정하는 것이 중요합니다.",
+        badge: "출시 영향 높음",
+        explain: "앱 이름은 홈 화면과 App Store 제품 페이지에서 보입니다. 앱 고유 주소는 사용자에게 직접 보이지 않지만, iPhone과 App Store가 이 앱을 구분하는 내부 ID입니다.",
+        fields: `
+          <div class="field">
+            <label for="appName">앱 이름</label>
+            <input id="appName" class="text-input" value="P.O.MFS" aria-label="앱 이름">
+          </div>
+
+          <div class="field">
+            <label for="bundle">앱 고유 주소</label>
+            <div class="input-row">
+              <input id="bundle" class="text-input" value="com.prideofmisfits.community" aria-label="앱 고유 주소">
+              <div class="suffix">예: com.company.app</div>
+            </div>
+          </div>
+
+          <div class="choice-grid">
+            <button class="choice active" type="button">
+              <div class="choice-title">iPhone + iPad</div>
+              <div class="choice-copy">대부분의 새 앱에 적합합니다. App Store에서 범용 앱처럼 보입니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">iPhone only</div>
+              <div class="choice-copy">iPhone 화면만 준비된 앱이면 안전한 선택입니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">Mac Catalyst 포함</div>
+              <div class="choice-copy">iPad 앱을 Mac에서도 배포할 때 사용합니다.</div>
+            </button>
+          </div>
+
+          <div class="assistant-note">
+            앱 고유 주소는 App Store에 앱을 등록할 때 쓰는 ID와 반드시 같아야 합니다.
+            첫 빌드를 올린 뒤에는 바꾸기 어렵기 때문에 회사나 서비스 이름을 넣은 형식을 추천합니다.
+          </div>
+        `,
+        targets: [
+          ["저장 위치", "설정 파일"],
+          ["Xcode 탭", "General"],
+          ["App Store", "앱 정보"]
+        ],
+        preview: {
+          phoneName: "P.O.MFS",
+          permissionTitle: "\"P.O.MFS\"에서 카메라에 접근하려고 합니다",
+          permissionText: "프로필 사진을 촬영하기 위해 카메라 접근이 필요합니다.",
+          storeRows: [
+            ["App Store 이름", "P.O.MFS"],
+            ["앱 고유 주소", "com.prideofmisfits.community"],
+            ["버전", "1.0 · build 1"]
+          ]
+        },
+        checkStatus: "2개 확인 필요",
+        checks: [
+          ["ok", "앱 고유 주소 설정됨", "App Store에 앱을 등록할 때 입력하는 ID와 맞춰야 합니다."],
+          ["ok", "버전 1.0 준비됨", "처음 출시 버전으로 사용할 수 있습니다."],
+          ["warn", "Privacy Policy URL 필요", "App Store 제출 전에 반드시 입력해야 합니다."],
+          ["warn", "Demo account 확인", "로그인이 필요한 앱은 심사용 계정을 준비해야 합니다."]
+        ],
+        changes: `설정 파일
++ PRODUCT_BUNDLE_IDENTIFIER: com.prideofmisfits.community
++ MARKETING_VERSION: "1.0"
++ CURRENT_PROJECT_VERSION: "1"
+
+App Store Connect
++ 앱 이름: P.O.MFS
++ 앱 고유 주소 확인 필요`,
+        actionKey: "next-question"
+      },
+      signing: {
+        eyebrow: "배포 계정",
+        title: "어떤 Apple 계정으로 앱을 배포할까요?",
+        helper: "iPhone에 직접 설치하거나 TestFlight, App Store에 올리려면 Apple Developer 계정이 필요합니다. 처음에는 Xcode가 자동으로 관리하는 방식을 추천합니다.",
+        badge: "실기기 빌드 필수",
+        explain: "이 설정은 앱을 누가 배포하는지 Apple에 증명하는 단계입니다. 사용자는 직접 인증서 파일을 이해하지 않아도 되도록 자동 설정을 기본으로 둡니다.",
+        fields: `
+          <div class="field">
+            <label for="developerAccount">Apple Developer 계정 상태</label>
+            <select id="developerAccount" class="select" aria-label="Apple Developer 계정 상태">
+              <option>유료 Apple Developer Program 가입 완료</option>
+              <option>아직 가입 전</option>
+              <option>다른 사람이 계정을 관리함</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="teamId">Apple 개발자 팀 ID</label>
+            <div class="input-row">
+              <input id="teamId" class="text-input" value="LT47CYB8SL" aria-label="Apple 개발자 팀 ID">
+              <div class="suffix">Apple 계정</div>
+            </div>
+          </div>
+
+          <div class="choice-grid">
+            <button class="choice active" type="button">
+              <div class="choice-title">Xcode 자동 관리</div>
+              <div class="choice-copy">처음 배포하는 사용자에게 가장 안전합니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">직접 관리</div>
+              <div class="choice-copy">인증서와 프로필을 아는 사용자만 선택합니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">나중에 연결</div>
+              <div class="choice-copy">지금은 설정만 저장하고 Xcode에서 다시 확인합니다.</div>
+            </button>
+          </div>
+
+          <div class="assistant-note">
+            이 도구는 Apple ID 비밀번호를 묻지 않습니다. 실제 제품에서는 Xcode 또는 Apple 공식 API Key로만 연결하도록 안내해야 합니다.
+          </div>
+        `,
+        targets: [
+          ["저장 위치", "설정 파일"],
+          ["Xcode 탭", "Signing & Capabilities"],
+          ["Apple 사이트", "Certificates"]
+        ],
+        preview: {
+          phoneName: "P.O.MFS",
+          permissionTitle: "이 앱은 Apple 개발자 계정으로 서명됩니다",
+          permissionText: "TestFlight와 App Store 제출 전에 Apple 팀 ID가 현재 앱과 맞는지 확인합니다.",
+          storeRows: [
+            ["Apple 팀", "LT47CYB8SL"],
+            ["서명 방식", "Xcode 자동 관리"],
+            ["배포 대상", "TestFlight · App Store"]
+          ]
+        },
+        checkStatus: "1개 확인 필요",
+        checks: [
+          ["ok", "Apple 팀 ID 입력됨", "현재 설정 파일에 팀 ID가 들어갑니다."],
+          ["ok", "자동 서명 권장", "처음 배포하는 사용자가 인증서 파일을 직접 다루지 않아도 됩니다."],
+          ["warn", "Apple Developer 가입 확인", "유료 개발자 계정이 아니면 App Store 제출이 불가능합니다."]
+        ],
+        changes: `설정 파일
++ DEVELOPMENT_TEAM: LT47CYB8SL
++ CODE_SIGN_STYLE: Automatic
+
+Xcode
++ Signing & Capabilities에서 Apple 계정 확인
++ Archive 전에 실기기 빌드 확인`,
+        actionKey: "preflight"
+      },
+      privacy: {
+        eyebrow: "권한과 개인정보",
+        title: "사용자 권한 팝업에 들어갈 문구를 준비할게요.",
+        helper: "카메라, 마이크, 위치, 사진 같은 민감한 권한은 사용자가 이해할 수 있는 설명 문구가 필요합니다. 이 문구는 iPhone 권한 팝업에 그대로 표시됩니다.",
+        badge: "심사 리스크",
+        explain: "권한 문구가 비어 있거나 실제 사용 목적과 다르면 심사에서 문제가 될 수 있습니다. 개인정보 처리 내용도 App Store 제출 전에 함께 확인해야 합니다.",
+        fields: `
+          <div class="field">
+            <label for="cameraText">카메라 권한 문구</label>
+            <textarea id="cameraText" aria-label="카메라 권한 문구">프로필 사진을 촬영하기 위해 카메라 접근이 필요합니다.</textarea>
+          </div>
+
+          <div class="field">
+            <label for="photoText">사진 보관함 권한 문구</label>
+            <textarea id="photoText" aria-label="사진 보관함 권한 문구">프로필 이미지를 선택하고 저장하기 위해 사진 접근이 필요합니다.</textarea>
+          </div>
+
+          <div class="field">
+            <label for="privacyUrl">개인정보 처리방침 주소</label>
+            <div class="input-row">
+              <input id="privacyUrl" class="text-input" placeholder="https://example.com/privacy" aria-label="개인정보 처리방침 주소">
+              <div class="suffix">필수</div>
+            </div>
+          </div>
+
+          <div class="assistant-note">
+            권한 문구는 “왜 필요한지”를 사용자가 이해할 수 있게 써야 합니다. “앱 사용을 위해 필요합니다”처럼 막연한 문구는 심사에서 약합니다.
+          </div>
+        `,
+        targets: [
+          ["저장 위치", "앱 정보 파일"],
+          ["Xcode 탭", "Info"],
+          ["App Store", "개인정보"]
+        ],
+        preview: {
+          phoneName: "P.O.MFS",
+          permissionTitle: "\"P.O.MFS\"에서 사진에 접근하려고 합니다",
+          permissionText: "프로필 이미지를 선택하고 저장하기 위해 사진 접근이 필요합니다.",
+          storeRows: [
+            ["권한 문구", "카메라 · 사진"],
+            ["개인정보", "URL 입력 필요"],
+            ["심사 영향", "높음"]
+          ]
+        },
+        checkStatus: "2개 확인 필요",
+        checks: [
+          ["ok", "카메라 문구 있음", "권한 팝업에 표시할 문구가 준비되었습니다."],
+          ["ok", "사진 문구 있음", "사진 접근 목적을 사용자에게 설명합니다."],
+          ["warn", "Privacy Policy URL 필요", "App Store Connect에 입력할 주소가 필요합니다."],
+          ["warn", "수집 데이터 확인", "계정, 위치, 연락처 등 수집하는 데이터를 App Store에 표시해야 합니다."]
+        ],
+        changes: `앱 정보 파일
++ NSCameraUsageDescription
++ NSPhotoLibraryUsageDescription
+
+App Store Connect
++ 개인정보 처리방침 URL 필요
++ 수집 데이터 항목 확인 필요`,
+        actionKey: "store-items"
+      },
+      capabilities: {
+        eyebrow: "Apple 기능",
+        title: "Apple 기능을 켤지 선택할게요.",
+        helper: "푸시 알림, Apple 로그인, 웹사이트 링크를 앱으로 열기 같은 기능을 켤지 선택합니다. 필요한 경우 Apple 계정 쪽 설정도 안내합니다.",
+        badge: "계정 설정 필요",
+        explain: "Apple 기능은 앱이 Apple 서비스를 사용할 수 있게 해주는 권한입니다. 일부 기능은 Xcode 설정만으로 끝나지 않고 Apple 웹사이트에서도 추가 설정이 필요합니다.",
+        fields: `
+          <div class="choice-grid" data-multi="true">
+            <button class="choice active" type="button">
+              <div class="choice-title">Apple 로그인 사용</div>
+              <div class="choice-copy">Apple로 로그인 버튼이 있는 앱이면 켜야 합니다.</div>
+            </button>
+            <button class="choice active" type="button">
+              <div class="choice-title">웹사이트 링크 연결</div>
+              <div class="choice-copy">웹 링크를 누르면 앱으로 열리게 할 때 사용합니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">Push 알림</div>
+              <div class="choice-copy">서버에서 사용자에게 알림을 보낼 때 필요합니다.</div>
+            </button>
+          </div>
+
+          <div class="field">
+            <label for="associatedDomain">앱과 연결할 웹사이트 주소</label>
+            <div class="input-row">
+              <input id="associatedDomain" class="text-input" value="applinks:prideofmisfits.com" aria-label="앱과 연결할 웹사이트 주소">
+              <div class="suffix">Domains</div>
+            </div>
+          </div>
+
+          <div class="assistant-note">
+            Apple 기능은 앱 안의 버튼만 보고 결정하면 안 됩니다. 웹사이트 파일, 서버 알림 인증서, Apple 계정 설정까지 같이 필요한 기능이 있습니다.
+          </div>
+        `,
+        targets: [
+          ["저장 위치", "권한 파일"],
+          ["Xcode 탭", "Signing & Capabilities"],
+          ["Apple 사이트", "Identifiers"]
+        ],
+        preview: {
+          phoneName: "P.O.MFS",
+          permissionTitle: "Apple 로그인과 웹 링크 기능이 켜져 있습니다",
+          permissionText: "사용자는 Apple 계정으로 로그인하고, 지원되는 웹 링크는 앱으로 열 수 있습니다.",
+          storeRows: [
+            ["Apple 기능", "Login · Domains"],
+            ["추가 확인", "Apple 웹사이트 설정"],
+            ["Push 알림", "선택 전"]
+          ]
+        },
+        checkStatus: "1개 확인 필요",
+        checks: [
+          ["ok", "Apple 로그인 권한 연결됨", "권한 파일에 Apple 로그인 항목이 반영됩니다."],
+          ["ok", "Associated Domains 입력됨", "웹 링크를 앱과 연결할 준비가 되었습니다."],
+          ["warn", "웹사이트 파일 확인", "Associated Domains는 웹사이트에도 Apple 확인 파일이 필요합니다."]
+        ],
+        changes: `Apple 기능 권한 파일
++ com.apple.developer.applesignin
++ com.apple.developer.associated-domains
+
+Apple Developer
++ Identifier 기능 확인 필요
++ 웹사이트 apple-app-site-association 확인 필요`,
+        actionKey: "apple-connect"
+      },
+      store: {
+        eyebrow: "App Store Review",
+        title: "심사자가 앱을 확인할 수 있게 준비할게요.",
+        helper: "로그인 앱은 데모 계정, 유료 기능은 설명, 웹뷰 앱은 앱의 네이티브 가치와 개인정보 안내가 필요합니다.",
+        badge: "제출 전 확인",
+        explain: "이 항목들은 앱 파일 안에 저장되지 않는 것도 많지만, App Store 제출 단계에서 빠지면 심사가 늦어지거나 반려될 수 있습니다.",
+        fields: `
+          <div class="field">
+            <label for="storeDescription">App Store에 보일 앱 설명</label>
+            <textarea id="storeDescription" aria-label="App Store에 보일 앱 설명">P.O.MFS 커뮤니티를 위한 콘텐츠와 멤버 경험을 제공합니다.</textarea>
+          </div>
+
+          <div class="field">
+            <label for="demoAccount">심사용 데모 계정</label>
+            <div class="input-row">
+              <input id="demoAccount" class="text-input" placeholder="review@example.com / password" aria-label="심사용 데모 계정">
+              <div class="suffix">로그인 앱</div>
+            </div>
+          </div>
+
+          <div class="choice-grid">
+            <button class="choice active" type="button">
+              <div class="choice-title">스크린샷 준비 중</div>
+              <div class="choice-copy">iPhone 화면 크기별 이미지가 필요합니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">수동 출시</div>
+              <div class="choice-copy">심사 통과 후 원하는 시점에 출시합니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">무료 앱</div>
+              <div class="choice-copy">가격과 출시 국가를 App Store Connect에서 정합니다.</div>
+            </button>
+          </div>
+
+          <div class="assistant-note">
+            App Store Connect는 “앱스토어 상품 페이지와 심사 제출 공간”입니다. Xcode 프로젝트 파일만 만들어서는 출시 준비가 끝나지 않습니다.
+          </div>
+        `,
+        targets: [
+          ["저장 위치", "App Store Connect"],
+          ["Xcode 탭", "Organizer"],
+          ["App Store", "심사 제출"]
+        ],
+        preview: {
+          phoneName: "P.O.MFS",
+          permissionTitle: "심사자는 데모 계정으로 앱을 확인합니다",
+          permissionText: "로그인이 필요한 앱은 Apple 심사자가 접근할 수 있는 계정을 제공해야 합니다.",
+          storeRows: [
+            ["상품 설명", "초안 있음"],
+            ["스크린샷", "준비 필요"],
+            ["데모 계정", "입력 필요"]
+          ]
+        },
+        checkStatus: "3개 확인 필요",
+        checks: [
+          ["ok", "앱 설명 초안 있음", "상품 페이지에 넣을 설명을 다듬을 수 있습니다."],
+          ["warn", "데모 계정 필요", "로그인 앱이면 심사용 계정을 반드시 입력해야 합니다."],
+          ["warn", "스크린샷 필요", "출시할 기기 크기에 맞는 스크린샷을 준비해야 합니다."],
+          ["warn", "가격과 출시 국가 선택", "무료/유료 여부와 출시 범위를 정해야 합니다."]
+        ],
+        changes: `App Store Connect
++ 앱 설명 초안
++ 심사용 데모 계정 필요
++ 스크린샷 필요
++ 가격과 출시 국가 선택 필요
+
+Xcode
++ Archive 후 업로드할 빌드 선택`,
+        actionKey: "store-items"
+      },
+      generate: {
+        eyebrow: "프로젝트 만들기",
+        title: "이제 Xcode에서 열 프로젝트 파일을 만들 준비가 됐습니다.",
+        helper: "버튼을 누르면 현재 앱 폴더를 확인하고, Xcode에서 열 수 있는 프로젝트 파일을 만듭니다. 그 다음 무엇이 바뀌었는지 쉬운 말로 보여줍니다.",
+        badge: "최종 단계",
+        explain: "프로젝트 파일을 만든 뒤에는 Xcode에서 Archive를 만들고 TestFlight 또는 App Store 업로드를 진행합니다.",
+        fields: `
+          <div class="assistant-note">
+            이 목업에서는 실제 파일을 만들지 않습니다. 실제 제품에서는 먼저 백업을 만들고, 미리 점검 결과를 보여준 뒤 사용자가 확인하면 Xcode 프로젝트 파일을 생성합니다.
+          </div>
+
+          <div class="choice-grid">
+            <button class="choice active" type="button" data-action="preflight">
+              <div class="choice-title">1. 미리 점검</div>
+              <div class="choice-copy">파일을 만들기 전 빠진 항목과 위험한 설정을 확인합니다.</div>
+            </button>
+            <button class="choice" type="button" data-action="generate-project">
+              <div class="choice-title">2. 프로젝트 만들기</div>
+              <div class="choice-copy">설정 파일을 기준으로 Xcode에서 열 파일을 만듭니다.</div>
+            </button>
+            <button class="choice" type="button">
+              <div class="choice-title">3. Xcode에서 열기</div>
+              <div class="choice-copy">생성된 프로젝트를 열고 Archive로 제출 준비를 이어갑니다.</div>
+            </button>
+          </div>
+
+          <div class="field">
+            <label for="backupPath">자동 백업 위치</label>
+            <input id="backupPath" class="text-input" value="앱 폴더 안의 .release-assistant-backups" aria-label="자동 백업 위치">
+          </div>
+        `,
+        targets: [
+          ["실행 도구", "XcodeGen"],
+          ["생성 파일", ".xcodeproj"],
+          ["다음 단계", "Archive"]
+        ],
+        preview: {
+          phoneName: "P.O.MFS",
+          permissionTitle: "프로젝트 생성 전 마지막 점검",
+          permissionText: "백업을 만든 뒤 Xcode에서 열 수 있는 프로젝트 파일을 생성합니다.",
+          storeRows: [
+            ["생성 예정", "P.O.MFS.xcodeproj"],
+            ["백업", "자동 생성"],
+            ["다음", "Xcode Archive"]
+          ]
+        },
+        checkStatus: "최종 확인",
+        checks: [
+          ["ok", "설정 파일 준비됨", "XcodeGen이 읽을 설정 파일이 있습니다."],
+          ["ok", "GitHub 계정 불필요", "로컬 앱 폴더만 있어도 사용할 수 있습니다."],
+          ["warn", "생성 전 백업 필요", "기존 Xcode 프로젝트가 있으면 덮어쓸 수 있으므로 백업이 먼저입니다."]
+        ],
+        changes: `실행 전
++ 현재 앱 폴더 확인
++ 자동 백업 생성
++ 변경 예정 목록 표시
+
+실행 후
++ P.O.MFS.xcodeproj 생성
++ Xcode에서 열기 버튼 표시`,
+        actionKey: "generate-project"
+      }
+    };
+
+    const stepButtons = Array.from(document.querySelectorAll(".step"));
+    const sectionEyebrow = document.getElementById("sectionEyebrow");
+    const questionTitle = document.getElementById("questionTitle");
+    const questionHelper = document.getElementById("questionHelper");
+    const riskBadge = document.getElementById("riskBadge");
+    const explainCopy = document.getElementById("explainCopy");
+    const questionFields = document.getElementById("questionFields");
+    const targetLines = document.getElementById("targetLines");
+    const phoneName = document.getElementById("phoneName");
+    const permissionTitle = document.getElementById("permissionTitle");
+    const permissionText = document.getElementById("permissionText");
+    const storePreview = document.getElementById("storePreview");
+    const checkStatus = document.getElementById("checkStatus");
+    const reviewChecklist = document.getElementById("reviewChecklist");
+    const changePreview = document.getElementById("changePreview");
+    const actionPreview = document.getElementById("actionPreview");
+    const actionEyebrow = document.getElementById("actionEyebrow");
+    const actionTitle = document.getElementById("actionTitle");
+    const actionCopy = document.getElementById("actionCopy");
+    const actionTag = document.getElementById("actionTag");
+    const actionSteps = document.getElementById("actionSteps");
+    const actionSideTitle = document.getElementById("actionSideTitle");
+    const actionSideCopy = document.getElementById("actionSideCopy");
+    const actionMock = document.getElementById("actionMock");
+    const actionFooter = document.getElementById("actionFooter");
+
+    const actionViews = {
+      "load-folder": {
+        eyebrow: "앱 폴더 불러오기",
+        title: "앱 폴더를 선택하면 필요한 파일을 자동으로 찾습니다.",
+        copy: "사용자는 앱 폴더만 고르면 됩니다. 도구가 설정 파일, 앱 정보 파일, Apple 기능 권한 파일, 아이콘 폴더를 찾아서 현재 상태를 읽습니다.",
+        tag: "파일 선택",
+        sideTitle: "사용자가 해야 할 일",
+        sideCopy: "Finder에서 앱 폴더를 한 번 선택합니다. GitHub 계정이나 Apple 계정 연결은 필요하지 않습니다.",
+        steps: [
+          ["폴더 선택창 열기", "예: MyVibeApp 폴더를 선택합니다."],
+          ["앱 정보 읽기", "앱 이름, 앱 고유 주소, 버전, 권한 문구를 찾아옵니다."],
+          ["부족한 항목 표시", "출시 전에 채워야 하는 항목을 쉬운 체크리스트로 보여줍니다."]
+        ],
+        mock: [
+          ["찾은 앱 이름", "P.O.MFS"],
+          ["찾은 앱 고유 주소", "com.prideofmisfits.community"],
+          ["확인 필요", "개인정보 처리방침 주소"]
+        ],
+        footer: "실제 제품에서는 여기서 로컬 폴더 선택창을 열고, 앱 폴더 안의 설정 파일을 읽습니다."
+      },
+      "load-settings": {
+        eyebrow: "설정 파일 불러오기",
+        title: "설정 파일만 받아서 현재 앱 설정을 보여줍니다.",
+        copy: "전체 앱 폴더가 없어도 설정 파일을 먼저 확인할 수 있습니다. 단, 권한 문구나 아이콘 같은 일부 정보는 앱 폴더가 있어야 더 정확히 볼 수 있습니다.",
+        tag: "파일 선택",
+        sideTitle: "언제 쓰나요?",
+        sideCopy: "다른 사람이 보내준 설정 파일을 검토하거나, Xcode 프로젝트를 만들기 전에 설정만 먼저 확인할 때 사용합니다.",
+        steps: [
+          ["설정 파일 선택", "project.yml 또는 project.yaml 파일을 선택합니다."],
+          ["쉬운 말로 변환", "어려운 설정 이름을 앱 이름, 앱 고유 주소, 배포 계정 같은 말로 바꿔 보여줍니다."],
+          ["수정할 항목 선택", "잘못된 값만 골라서 질문 방식으로 고칩니다."]
+        ],
+        mock: [
+          ["설정 파일", "project.yml"],
+          ["앱 고유 주소", "com.example.myapp"],
+          ["상태", "수정 가능"]
+        ],
+        footer: "실제 제품에서는 설정 파일만 불러온 경우, 앱 폴더를 추가로 연결하라고 안내할 수 있습니다."
+      },
+      "new-app": {
+        eyebrow: "새 앱 설정 만들기",
+        title: "아직 Xcode 프로젝트가 없어도 출시용 설정 초안을 만들 수 있습니다.",
+        copy: "앱 이름, 앱 고유 주소, 지원 기기, 권한 사용 여부를 질문으로 입력받아 처음 설정 파일을 만듭니다.",
+        tag: "새로 만들기",
+        sideTitle: "초보자용 시작",
+        sideCopy: "처음부터 전문 설정을 묻지 않고, 앱스토어에 올릴 때 필요한 질문부터 시작합니다.",
+        steps: [
+          ["앱 이름 입력", "사용자가 홈 화면과 App Store에서 볼 이름을 적습니다."],
+          ["앱 고유 주소 만들기", "예: com.mycompany.myapp 형식으로 추천합니다."],
+          ["기본 프로젝트 생성", "Xcode에서 열 수 있는 프로젝트 파일을 만들 준비를 합니다."]
+        ],
+        mock: [
+          ["앱 이름", "My First App"],
+          ["지원 기기", "iPhone + iPad"],
+          ["최소 iOS", "자동 추천"]
+        ],
+        footer: "실제 제품에서는 새 프로젝트 템플릿까지 만들지, 설정 파일만 만들지 선택하게 할 수 있습니다."
+      },
+      "apple-connect": {
+        eyebrow: "Apple 정보 연결",
+        title: "App Store에 등록된 앱 정보와 현재 앱 설정을 비교합니다.",
+        copy: "이 연결은 선택 사항입니다. Apple ID 비밀번호를 입력받지 않고, 사용자가 직접 만든 App Store Connect API Key를 사용합니다.",
+        tag: "선택 사항",
+        sideTitle: "연결하면 좋은 점",
+        sideCopy: "앱 고유 주소, 앱 이름, 등록된 앱 상태, 빌드 버전이 현재 앱 설정과 같은지 확인할 수 있습니다.",
+        steps: [
+          ["API Key 안내 보기", "Apple 웹사이트에서 키를 만드는 방법을 쉬운 단계로 보여줍니다."],
+          ["키 파일 선택", "Issuer ID, Key ID, private key 파일을 로컬에서 선택합니다."],
+          ["앱 정보 비교", "App Store에 만든 앱 기록과 현재 앱 폴더의 설정이 같은지 확인합니다."]
+        ],
+        mock: [
+          ["비밀번호 입력", "필요 없음"],
+          ["가져올 정보", "앱 이름, 앱 ID, 빌드"],
+          ["연결 방식", "공식 API Key"]
+        ],
+        footer: "실제 제품에서는 Apple 정보 연결을 건너뛰어도 출시 체크리스트를 계속 사용할 수 있어야 합니다."
+      },
+      "store-items": {
+        eyebrow: "App Store 제출 항목",
+        title: "앱스토어 상품 페이지와 심사 제출에 필요한 정보를 작성합니다.",
+        copy: "Xcode 프로젝트 설정과 별도로, App Store에 보일 앱 설명, 스크린샷, 개인정보 처리방침, 심사용 계정도 준비해야 합니다.",
+        tag: "제출 준비",
+        sideTitle: "여기에 저장되는 정보",
+        sideCopy: "일부는 앱 파일이 아니라 App Store Connect에 직접 입력해야 합니다. 이 도구는 빠진 항목을 체크하고 복사 가능한 형태로 정리합니다.",
+        steps: [
+          ["상품 페이지 정보", "앱 이름, 부제, 설명, 키워드, 카테고리, 고객지원 주소를 준비합니다."],
+          ["개인정보 정보", "개인정보 처리방침 주소와 수집 데이터 종류를 확인합니다."],
+          ["심사용 정보", "데모 계정, 리뷰 메모, 연락처, 가격과 출시 국가를 정리합니다."]
+        ],
+        mock: [
+          ["필수", "개인정보 처리방침 URL"],
+          ["필수 가능", "스크린샷"],
+          ["로그인 앱", "데모 계정 필요"]
+        ],
+        footer: "실제 제품에서는 App Store Connect API 연결 시 가능한 항목은 자동 비교하고, 나머지는 체크리스트로 안내합니다."
+      },
+      "previous-question": {
+        eyebrow: "이전 설정",
+        title: "직전 질문으로 돌아갑니다.",
+        copy: "실제 제품에서는 사용자가 이전 답변을 다시 확인하고 수정할 수 있게 합니다.",
+        tag: "질문 이동",
+        sideTitle: "안전한 이동",
+        sideCopy: "이전으로 가도 입력한 값은 사라지지 않고 임시 저장되어야 합니다.",
+        steps: [
+          ["현재 답변 저장", "사용자가 입력한 값을 잃지 않습니다."],
+          ["이전 질문 표시", "직전 단계의 설명과 미리보기를 다시 보여줍니다."],
+          ["변경 여부 표시", "수정된 값이 있으면 눈에 띄게 알려줍니다."]
+        ],
+        mock: [
+          ["현재 단계", "앱 기본 정보"],
+          ["이전 단계", "앱 폴더 불러오기"],
+          ["저장 상태", "자동 저장됨"]
+        ],
+        footer: "실제 제품에서는 질문별 자동 저장이 중요합니다."
+      },
+      "skip-question": {
+        eyebrow: "질문 건너뛰기",
+        title: "모르는 항목은 나중에 다시 확인하도록 표시합니다.",
+        copy: "왕초보 사용자는 모든 질문에 바로 답하지 못할 수 있습니다. 건너뛴 항목은 출시 전 체크리스트에 남겨둡니다.",
+        tag: "나중에 확인",
+        sideTitle: "건너뛰어도 되나요?",
+        sideCopy: "일부 항목은 나중에 답해도 됩니다. 단, 필수 항목은 프로젝트 만들기 전에 다시 확인하게 합니다.",
+        steps: [
+          ["현재 질문 보류", "답을 모르는 항목은 확인 필요로 표시합니다."],
+          ["다음 질문으로 이동", "멈추지 않고 전체 흐름을 계속 진행합니다."],
+          ["마지막에 다시 확인", "필수 항목은 프로젝트 만들기 전에 다시 묻습니다."]
+        ],
+        mock: [
+          ["보류 항목", "개인정보 처리방침 URL"],
+          ["중요도", "높음"],
+          ["마지막 확인", "필요"]
+        ],
+        footer: "실제 제품에서는 초보자가 막히지 않도록 건너뛰기와 나중에 확인 흐름이 필요합니다."
+      },
+      "next-question": {
+        eyebrow: "다음 설정",
+        title: "현재 답변을 저장하고 다음 출시 준비 질문으로 이동합니다.",
+        copy: "질문 하나가 끝날 때마다 오른쪽 미리보기와 출시 준비 체크리스트가 같이 업데이트됩니다.",
+        tag: "질문 이동",
+        sideTitle: "다음에 보일 것",
+        sideCopy: "현재 단계 다음에는 Apple 배포 계정, 권한 문구, 개인정보, App Store 제출 항목을 순서대로 확인합니다.",
+        steps: [
+          ["현재 답변 저장", "앱 이름과 앱 고유 주소를 설정 파일에 반영할 준비를 합니다."],
+          ["위험도 확인", "나중에 바꾸기 어려운 값인지 알려줍니다."],
+          ["다음 질문 표시", "Apple 계정과 배포 준비 단계로 이동합니다."]
+        ],
+        mock: [
+          ["저장 예정", "앱 이름, 앱 고유 주소"],
+          ["다음 단계", "배포 계정"],
+          ["진행률", "다음 단계로 이동"]
+        ],
+        footer: "실제 제품에서는 이 시점에 파일을 바로 덮어쓰기보다 임시 변경 목록에 쌓는 방식이 안전합니다."
+      },
+      "config-preview": {
+        eyebrow: "설정 파일 미리보기",
+        title: "쉬운 답변이 실제 설정 파일에 어떻게 들어가는지 보여줍니다.",
+        copy: "기본 화면에서는 어려운 파일 이름을 숨기지만, 자세히 보기를 누르면 실제로 바뀔 항목을 확인할 수 있습니다.",
+        tag: "자세히",
+        sideTitle: "누가 보나요?",
+        sideCopy: "도움을 주는 개발자나 고급 사용자가 검토할 수 있도록 전문 이름도 함께 보여줍니다.",
+        steps: [
+          ["쉬운 이름 표시", "앱 고유 주소, Apple 개발자 팀처럼 이해하기 쉬운 이름을 보여줍니다."],
+          ["전문 이름 함께 표시", "PRODUCT_BUNDLE_IDENTIFIER 같은 실제 설정 이름을 접어서 보여줍니다."],
+          ["변경 전후 비교", "무엇이 바뀌는지 저장 전에 확인합니다."]
+        ],
+        mock: [
+          ["쉬운 이름", "앱 고유 주소"],
+          ["전문 이름", "PRODUCT_BUNDLE_IDENTIFIER"],
+          ["저장 파일", "설정 파일"]
+        ],
+        footer: "실제 제품에서는 이 화면에서 복사하거나 파일로 내보내는 기능도 넣을 수 있습니다."
+      },
+      "preflight": {
+        eyebrow: "미리 점검",
+        title: "프로젝트를 만들기 전에 위험한 부분을 먼저 확인합니다.",
+        copy: "아직 파일을 만들지 않고, 부족한 항목과 바뀔 내용을 먼저 보여줍니다. Git을 몰라도 자동 백업 안내를 제공합니다.",
+        tag: "안전 점검",
+        sideTitle: "검사 항목",
+        sideCopy: "필수 값 누락, 권한 문구 누락, Apple 정보 불일치, App Store 제출 항목 누락을 확인합니다.",
+        steps: [
+          ["현재 폴더 확인", "앱 폴더와 기존 파일이 있는지 확인합니다."],
+          ["출시 필수 항목 검사", "앱 고유 주소, 버전, 권한 문구, 개인정보 항목을 검사합니다."],
+          ["바뀔 내용 미리보기", "프로젝트 만들기 전에 변경 목록을 쉬운 말로 보여줍니다."]
+        ],
+        mock: [
+          ["결과", "2개 확인 필요"],
+          ["파일 변경", "아직 없음"],
+          ["백업", "생성 예정"]
+        ],
+        footer: "실제 제품에서는 미리 점검을 통과하거나 사용자가 확인한 뒤에만 프로젝트 만들기를 실행합니다."
+      },
+      "generate-project": {
+        eyebrow: "Xcode 프로젝트 만들기",
+        title: "Xcode에서 열 수 있는 프로젝트 파일을 만듭니다.",
+        copy: "마지막 단계입니다. 먼저 백업을 만들고, 설정 파일을 저장한 뒤, XcodeGen으로 Xcode 프로젝트 파일을 생성합니다.",
+        tag: "실행 단계",
+        sideTitle: "실행 후 보여줄 것",
+        sideCopy: "성공 여부, 바뀐 파일, 다음에 Xcode에서 눌러야 할 메뉴를 단계별로 안내합니다.",
+        steps: [
+          ["자동 백업 만들기", "문제가 생기면 이전 상태로 돌아갈 수 있게 합니다."],
+          ["Xcode 프로젝트 생성", "설정 파일을 기준으로 Xcode에서 열 파일을 만듭니다."],
+          ["다음 안내 표시", "Xcode 열기, Archive 만들기, App Store 업로드 순서를 보여줍니다."]
+        ],
+        mock: [
+          ["생성 파일", "MyVibeApp.xcodeproj"],
+          ["다음 버튼", "Xcode에서 열기"],
+          ["상태", "성공 화면 표시"]
+        ],
+        footer: "실제 제품에서는 여기서 로컬 명령을 실행하므로 순수 웹앱보다 로컬 헬퍼 앱 또는 데스크톱 앱 구조가 적합합니다."
+      },
+      "reset-action": {
+        eyebrow: "Next Action",
+        title: "버튼을 누르면 다음 화면이 여기에서 미리 보입니다.",
+        copy: "실제 제품에서는 파일 선택, Apple 정보 연결, 제출 준비 항목 작성, 미리 점검, 프로젝트 만들기 같은 다음 액션이 이 영역에 표시됩니다.",
+        tag: "시안",
+        sideTitle: "왕초보용 설명",
+        sideCopy: "이 도구는 전문 설정 이름보다 “무엇을 준비해야 하는지”를 먼저 보여줍니다.",
+        steps: [
+          ["원하는 버튼을 눌러보세요", "각 버튼이 어떤 다음 화면으로 이어질지 시안으로 확인할 수 있습니다."]
+        ],
+        mock: [
+          ["화면 상태", "대기 중"],
+          ["실제 실행", "아직 없음"]
+        ],
+        footer: "실제 제품에서는 여기에서 파일 선택창, 연결 안내, 점검 결과, 생성 로그가 이어집니다."
+      }
+    };
+
+    function renderTargetLines(rows) {
+      targetLines.innerHTML = rows.map((row) => `
+        <div class="target-line"><span>${row[0]}</span><code>${row[1]}</code></div>
+      `).join("");
+    }
+
+    function renderStorePreview(rows) {
+      storePreview.innerHTML = rows.map((row) => `
+        <div class="store-line"><span>${row[0]}</span><strong>${row[1]}</strong></div>
+      `).join("");
+    }
+
+    function renderChecklist(items) {
+      reviewChecklist.innerHTML = items.map((item) => {
+        const [status, title, copy] = item;
+        const className = status === "ok" ? "check" : `check ${status}`;
+        const icon = status === "ok" ? "✓" : "!";
+        return `
+          <div class="${className}">
+            <div class="check-icon">${icon}</div>
+            <div>
+              <strong>${title}</strong>
+              <p>${copy}</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderStep(stepKey) {
+      const copy = steps[stepKey] || steps.basic;
+      stepButtons.forEach((item) => item.classList.toggle("active", item.dataset.step === stepKey));
+      sectionEyebrow.textContent = copy.eyebrow;
+      questionTitle.textContent = copy.title;
+      questionHelper.textContent = copy.helper;
+      riskBadge.textContent = copy.badge;
+      explainCopy.textContent = copy.explain;
+      questionFields.innerHTML = copy.fields;
+      phoneName.textContent = copy.preview.phoneName;
+      permissionTitle.textContent = copy.preview.permissionTitle;
+      permissionText.textContent = copy.preview.permissionText;
+      checkStatus.textContent = copy.checkStatus;
+      changePreview.textContent = copy.changes;
+      renderTargetLines(copy.targets);
+      renderStorePreview(copy.preview.storeRows);
+      renderChecklist(copy.checks);
+      renderActionPreview(copy.actionKey, false);
+    }
+
+    function renderActionPreview(actionKey, shouldScroll = true) {
+      const view = actionViews[actionKey] || actionViews["reset-action"];
+      actionEyebrow.textContent = view.eyebrow;
+      actionTitle.textContent = view.title;
+      actionCopy.textContent = view.copy;
+      actionTag.textContent = view.tag;
+      actionSideTitle.textContent = view.sideTitle;
+      actionSideCopy.textContent = view.sideCopy;
+      actionFooter.textContent = view.footer;
+      actionSteps.innerHTML = view.steps.map((step, index) => `
+        <div class="action-step">
+          <span class="action-step-num">${index + 1}</span>
+          <div>
+            <strong>${step[0]}</strong>
+            <span>${step[1]}</span>
+          </div>
+        </div>
+      `).join("");
+      actionMock.innerHTML = view.mock.map((row) => `
+        <div class="mock-row"><span>${row[0]}</span><strong>${row[1]}</strong></div>
+      `).join("");
+      if (shouldScroll) {
+        actionPreview.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    stepButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        renderStep(button.dataset.step);
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-action]");
+      if (actionButton) {
+        event.preventDefault();
+        renderActionPreview(actionButton.dataset.action);
+      }
+
+      const choice = event.target.closest(".choice");
+      if (!choice) return;
+      const group = choice.parentElement;
+      if (group.dataset.multi === "true") {
+        choice.classList.toggle("active");
+        return;
+      }
+      group.querySelectorAll(".choice").forEach((item) => item.classList.remove("active"));
+      choice.classList.add("active");
+    });
+
+    renderStep("basic");
+
+    const beginnerMode = document.getElementById("beginnerMode");
+    const advancedMode = document.getElementById("advancedMode");
+    const advancedPanel = document.getElementById("advancedPanel");
+
+    beginnerMode.addEventListener("click", () => {
+      beginnerMode.classList.add("active");
+      advancedMode.classList.remove("active");
+      advancedPanel.classList.add("hidden");
+    });
+
+    advancedMode.addEventListener("click", () => {
+      advancedMode.classList.add("active");
+      beginnerMode.classList.remove("active");
+      advancedPanel.classList.remove("hidden");
+    });
+
+    const notesModal = document.getElementById("notesModal");
+    const openNotes = document.getElementById("openNotes");
+    const closeNotes = document.getElementById("closeNotes");
+    const closeNotesFooter = document.getElementById("closeNotesFooter");
+
+    function showNotes() {
+      notesModal.classList.remove("hidden");
+    }
+
+    function hideNotes() {
+      notesModal.classList.add("hidden");
+    }
+
+    openNotes.addEventListener("click", showNotes);
+    closeNotes.addEventListener("click", hideNotes);
+    closeNotesFooter.addEventListener("click", hideNotes);
+    notesModal.addEventListener("click", (event) => {
+      if (event.target === notesModal) hideNotes();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") hideNotes();
+    });
+  </script>
+</body>
+</html>
