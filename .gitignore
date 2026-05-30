@@ -2,6 +2,8 @@ node_modules
 dist
 artifacts
 docs
+HOF/
+INJECT/
 *.tsbuildinfo
 .DS_Store
 .env
