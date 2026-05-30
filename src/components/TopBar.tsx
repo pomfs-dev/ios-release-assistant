@@ -10,10 +10,10 @@ export function TopBar({ advancedMode, onToggleAdvanced, onOpenNotes }: TopBarPr
   return (
     <header className="topbar">
       <div className="brand-block">
-        <div className="brand-mark">iR</div>
-        <div>
-          <p className="eyebrow">iOS Release Assistant</p>
-          <h1>앱 출시 설정 도우미</h1>
+        <div className="brand-mark">iOS</div>
+        <div className="brand-copy">
+          <h1>Release Assistant</h1>
+          <p>앱 출시 전 설정을 대신 정리해주는 쉬운 도우미</p>
         </div>
       </div>
 
