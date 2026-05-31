@@ -1,0 +1,21 @@
+name: FixtureApp
+options:
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  FixtureApp:
+    type: application
+    platform: iOS
+    productName: Fixture App
+    sources:
+      - FixtureApp
+    resources:
+      - FixtureApp/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.fixture
+        DEVELOPMENT_TEAM: ABCDE12345
+        INFOPLIST_FILE: FixtureApp/Info.plist
+        CODE_SIGN_ENTITLEMENTS: FixtureApp/FixtureApp.entitlements
+        MARKETING_VERSION: 1.2.3
+        CURRENT_PROJECT_VERSION: 45

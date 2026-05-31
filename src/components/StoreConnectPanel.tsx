@@ -1,5 +1,13 @@
+import { useEffect } from "react";
+import type { AppleConnectionState, AppleCredentialDraft } from "../types";
+
 type StoreConnectPanelProps = {
-  onAction: (actionKey: string) => void;
+  appleConnection: AppleConnectionState;
+  appleCredentialDraft: AppleCredentialDraft;
+  appleFocusToken: number;
+  onAppleCredentialChange: (field: keyof AppleCredentialDraft, value: string) => void;
+  onPrepareAppleSession: () => void;
+  onOpenStoreStep: () => void;
 };
 
 const storeTasks = [
@@ -9,6 +17,13 @@ const storeTasks = [
     title: "앱스토어 기본 정보",
     copy: "앱 이름, 부제, 앱 고유 주소, 카테고리, 고객지원 주소를 준비합니다.",
     tag: "완료",
+  },
+  {
+    state: "warn",
+    icon: "!",
+    title: "앱 아이콘",
+    copy: "Xcode asset catalog에 App Store용 1024x1024 아이콘이 들어있는지 확인합니다.",
+    tag: "빌드 포함",
   },
   {
     state: "warn",
@@ -47,7 +62,30 @@ const storeTasks = [
   },
 ];
 
-export function StoreConnectPanel({ onAction }: StoreConnectPanelProps) {
+function connectionStatusLabel(connection: AppleConnectionState) {
+  if (connection.status === "ready") return "세션 준비됨";
+  if (connection.status === "connecting") return "연결 확인 중";
+  if (connection.status === "error") return "입력 확인 필요";
+  if (connection.status === "editing") return "입력 중";
+  return "연결 안 됨";
+}
+
+export function StoreConnectPanel({
+  appleConnection,
+  appleCredentialDraft,
+  appleFocusToken,
+  onAppleCredentialChange,
+  onOpenStoreStep,
+  onPrepareAppleSession,
+}: StoreConnectPanelProps) {
+  useEffect(() => {
+    if (!appleFocusToken) return;
+
+    const field = document.querySelector<HTMLElement>(".asc-connect-field input");
+    field?.scrollIntoView({ block: "center", behavior: "smooth" });
+    field?.focus();
+  }, [appleFocusToken]);
+
   return (
     <article className="store-connect-panel">
       <div className="store-connect-head">
@@ -78,12 +116,115 @@ export function StoreConnectPanel({ onAction }: StoreConnectPanelProps) {
         ))}
       </div>
 
+      <section className="asc-connect-box" aria-label="App Store Connect API Key">
+        <div className="asc-connect-head">
+          <div>
+            <div className="asc-connect-title">Apple 정보 세션 연결</div>
+            <p>
+              App Store Connect API Key로 Apple API에 실제 앱 조회 요청을 보냅니다.
+              private key는 파일에 저장하지 않고 연결 확인 후 입력칸에서 비웁니다.
+            </p>
+          </div>
+          <span
+            className={`scan-status ${
+              appleConnection.status === "ready"
+                ? "success"
+                : appleConnection.status === "error"
+                  ? "error"
+                  : appleConnection.status === "connecting"
+                    ? "loading"
+                  : ""
+            }`}
+          >
+            {connectionStatusLabel(appleConnection)}
+          </span>
+        </div>
+
+        <div className="asc-field-grid">
+          <label className="asc-connect-field">
+            <span>Issuer ID</span>
+            <input
+              autoComplete="off"
+              value={appleCredentialDraft.issuerId}
+              onChange={(event) => onAppleCredentialChange("issuerId", event.target.value)}
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              spellCheck={false}
+            />
+          </label>
+          <label className="asc-connect-field">
+            <span>Key ID</span>
+            <input
+              autoComplete="off"
+              value={appleCredentialDraft.keyId}
+              onChange={(event) => onAppleCredentialChange("keyId", event.target.value)}
+              placeholder="ABC123DEFG"
+              spellCheck={false}
+            />
+          </label>
+          <label className="asc-connect-field">
+            <span>Apple App ID</span>
+            <input
+              autoComplete="off"
+              value={appleCredentialDraft.appAppleId}
+              onChange={(event) => onAppleCredentialChange("appAppleId", event.target.value)}
+              placeholder="1234567890"
+              spellCheck={false}
+            />
+          </label>
+          <label className="asc-connect-field">
+            <span>Bundle ID</span>
+            <input
+              autoComplete="off"
+              value={appleCredentialDraft.bundleId}
+              onChange={(event) => onAppleCredentialChange("bundleId", event.target.value)}
+              placeholder="com.company.app"
+              spellCheck={false}
+            />
+          </label>
+          <label className="asc-connect-field private-key">
+            <span>.p8 Private Key</span>
+            <textarea
+              autoComplete="off"
+              value={appleCredentialDraft.privateKeyInput}
+              onChange={(event) => onAppleCredentialChange("privateKeyInput", event.target.value)}
+              placeholder="-----BEGIN PRIVATE KEY-----"
+              spellCheck={false}
+            />
+          </label>
+        </div>
+
+        {appleConnection.status === "error" ? (
+          <div className="safe-note error">{appleConnection.error}</div>
+        ) : null}
+        {appleConnection.status === "ready" ? (
+          <div className="safe-note">
+            App Store Connect API로 {appleConnection.app?.name ?? "앱"} 정보를 확인했습니다.
+            {appleConnection.app?.bundleId ? ` Bundle ID: ${appleConnection.app.bundleId}.` : ""}
+            {" "}private key 원문은 입력칸에 남기지 않았습니다.
+          </div>
+        ) : null}
+
+        <div className="asc-connect-actions">
+          <button
+            type="button"
+            className="secondary"
+            disabled={appleConnection.status === "connecting"}
+            onClick={onPrepareAppleSession}
+          >
+            {appleConnection.status === "connecting" ? "Apple API 확인 중..." : "Apple API로 연결 확인"}
+          </button>
+          <button type="button" className="secondary" onClick={onOpenStoreStep}>
+            제출 항목 입력
+          </button>
+        </div>
+      </section>
+
       <div className="store-connect-footer">
         <p>
-          Apple 정보를 연결하면 App Store에 이미 만든 앱 기록을 읽어와 현재 앱 설정과
-          비교합니다. 연결하지 않아도 빈칸 체크리스트와 작성 가이드는 사용할 수 있습니다.
+          Apple 정보를 연결하면 App Store Connect의 앱 존재 여부를 확인합니다. 상품 페이지
+          입력과 심사 제출 값은 Review & Confirm에서 수동 처리 항목으로 분리해 확인합니다.
         </p>
-        <button type="button" className="secondary" onClick={() => onAction("store-items")}>
+        <button type="button" className="secondary" onClick={onOpenStoreStep}>
           App Store 제출 항목 열기
         </button>
       </div>

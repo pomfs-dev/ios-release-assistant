@@ -9,7 +9,8 @@
     "dev": "node server/local-server.mjs",
     "dev:vite": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "lucide-react": "^0.555.0",
@@ -18,10 +19,11 @@
     "yaml": "^2.8.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.1.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^4.1.7"
   }
 }

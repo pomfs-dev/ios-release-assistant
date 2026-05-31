@@ -137,7 +137,7 @@ export const releaseSteps: StepDefinition[] = [
       {
         kind: "note",
         value:
-          "이 도구는 Apple ID 비밀번호를 묻지 않습니다. 실제 제품에서는 Xcode 또는 Apple 공식 API Key로만 연결하도록 안내해야 합니다.",
+          "이 도구는 Apple ID 비밀번호를 묻지 않습니다. Xcode 또는 App Store Connect API Key로만 연결합니다.",
       },
     ],
     targets: [
@@ -345,23 +345,39 @@ export const releaseSteps: StepDefinition[] = [
         kind: "text",
         label: "심사용 데모 계정",
         placeholder: "review@example.com / password",
-        helper: "로그인 앱",
+        helper: "로그인 필요 시",
       },
       {
         kind: "choices",
+        label: "심사 접근 방식",
         choices: [
           {
-            title: "스크린샷 준비 중",
-            copy: "iPhone 화면 크기별 이미지가 필요합니다.",
+            title: "로그인 필요",
+            copy: "심사자가 앱 기능을 보려면 계정이 필요합니다.",
             active: true,
           },
           {
-            title: "수동 출시",
-            copy: "심사 통과 후 원하는 시점에 출시합니다.",
+            title: "로그인 필요 없음",
+            copy: "계정 없이도 심사자가 핵심 기능을 확인할 수 있습니다.",
+          },
+        ],
+      },
+      {
+        kind: "choices",
+        label: "App Store 미디어 자산",
+        multi: true,
+        choices: [
+          {
+            title: "스크린샷 준비 완료",
+            copy: "App Store Connect에 올릴 스크린샷을 최소 1장 준비했습니다.",
           },
           {
-            title: "무료 앱",
-            copy: "가격과 출시 국가를 App Store Connect에서 정합니다.",
+            title: "iPad 스크린샷 준비 완료",
+            copy: "iPad도 지원하는 앱이라면 iPad용 스크린샷도 준비했습니다.",
+          },
+          {
+            title: "앱 미리보기 영상 준비",
+            copy: "선택 사항인 앱 미리보기 영상을 준비할 계획입니다.",
           },
         ],
       },
@@ -425,7 +441,7 @@ export const releaseSteps: StepDefinition[] = [
       {
         kind: "note",
         value:
-          "이 MVP 화면에서는 실제 파일을 만들지 않습니다. 실제 제품에서는 먼저 백업을 만들고, 미리 점검 결과를 보여준 뒤 사용자가 확인하면 Xcode 프로젝트 파일을 생성합니다.",
+          "실제 파일 저장과 xcodegen generate는 Review & Confirm에서 백업, 저장 적용, 프로젝트 생성 승인을 각각 받은 뒤 실행합니다.",
       },
       {
         kind: "choices",

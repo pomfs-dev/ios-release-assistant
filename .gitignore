@@ -1,9 +1,11 @@
 node_modules
 dist
 artifacts
+prototypes/
 docs
 HOF/
 INJECT/
+.release-assistant-backups/
 *.tsbuildinfo
 .DS_Store
 .env

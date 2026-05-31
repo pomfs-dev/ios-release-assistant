@@ -1,0 +1,127 @@
+export const BRIDGE_VERSION = "0.1.0";
+
+export const BRIDGE_ENDPOINTS = [
+  {
+    method: "GET",
+    path: "/api/bridge/health",
+    status: "implemented",
+    access: "public",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/pair",
+    status: "implemented",
+    access: "pairing",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/scan-folder",
+    status: "implemented",
+    access: "paired-project-data",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/browse-path",
+    status: "implemented",
+    access: "paired-local-file-browser",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/select-folder",
+    status: "implemented",
+    access: "paired-local-file-picker",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/select-project-spec",
+    status: "implemented",
+    access: "paired-local-file-picker",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/select-screenshot",
+    status: "implemented",
+    access: "paired-local-file-picker",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/build-write-plan",
+    status: "implemented",
+    access: "paired-planning",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/backup",
+    status: "implemented",
+    access: "paired-mutation",
+    mutation: true,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/apply-write-plan",
+    status: "implemented",
+    access: "paired-mutation",
+    mutation: true,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/generate",
+    status: "implemented",
+    access: "paired-mutation",
+    mutation: true,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/asc/connect",
+    status: "implemented",
+    access: "paired-sensitive-session",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/asc/read",
+    status: "implemented",
+    access: "paired-project-data",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/asc/build-update-plan",
+    status: "implemented",
+    access: "paired-planning",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/asc/update-draft",
+    status: "implemented",
+    access: "paired-mutation",
+    mutation: true,
+  },
+];
+
+export function getBridgeCapabilities({ paired = false } = {}) {
+  return {
+    version: BRIDGE_VERSION,
+    mode: "local-bridge",
+    paired,
+    loopbackOnly: true,
+    secretStorage: "session-memory-only",
+    endpoints: BRIDGE_ENDPOINTS,
+    security: {
+      pairingRequiredForProjectData: true,
+      mutationRequiresPlanId: true,
+      mutationRequiresConfirmationToken: true,
+      wildcardCorsForMutations: false,
+      redaction: true,
+    },
+  };
+}
