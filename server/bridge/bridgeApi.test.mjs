@@ -696,23 +696,6 @@ describe("bridge API foundation", () => {
       "content-type": "application/json",
     };
 
-    const rejectedConnect = await fetch(`${baseUrl}/api/bridge/asc/connect`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        issuerId: "issuer-id",
-        keyId: "KEY1234567",
-        bundleId: "com.example.fixture",
-        privateKeyInput,
-      }),
-    });
-    const rejectedConnectPayload = await readJson(rejectedConnect);
-    expect(rejectedConnect.status).toBe(403);
-    expect(rejectedConnectPayload.error).toContain("페이지를 새로고침");
-    expect(rejectedConnectPayload.reason).toBe("missing-approval");
-
-    const connectApproval = await createApproval(baseUrl, headers, "asc-connect");
-
     const connectResponse = await fetch(`${baseUrl}/api/bridge/asc/connect`, {
       method: "POST",
       headers,
@@ -721,7 +704,6 @@ describe("bridge API foundation", () => {
         keyId: "KEY1234567",
         bundleId: "com.example.fixture",
         privateKeyInput,
-        approvalToken: connectApproval.approvalToken,
       }),
     });
     const connected = await readJson(connectResponse);
@@ -910,7 +892,6 @@ describe("bridge API foundation", () => {
       "content-type": "application/json",
     };
 
-    const connectApproval = await createApproval(baseUrl, headers, "asc-connect");
     const connectResponse = await fetch(`${baseUrl}/api/bridge/asc/connect`, {
       method: "POST",
       headers,
@@ -919,7 +900,6 @@ describe("bridge API foundation", () => {
         keyId: "KEY1234567",
         bundleId: "com.example.fixture",
         privateKeyInput,
-        approvalToken: connectApproval.approvalToken,
       }),
     });
     expect(connectResponse.status).toBe(200);

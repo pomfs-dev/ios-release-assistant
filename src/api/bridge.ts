@@ -18,11 +18,6 @@ import type {
 const BRIDGE_TIMEOUT_MS = 18_000;
 const GENERATE_TIMEOUT_MS = 180_000;
 const SCAN_TIMEOUT_MS = 35_000;
-const RETRYABLE_APPROVAL_REASONS = new Set([
-  "expired-approval",
-  "invalid-approval",
-  "used-approval",
-]);
 
 let pairingToken: string | null = null;
 let pairingPromise: Promise<string> | null = null;
@@ -164,30 +159,13 @@ async function createApproval(action: string, planId?: string) {
   return approval.approvalToken;
 }
 
-function isRetryableApprovalError(error: unknown) {
-  return (
-    error instanceof BridgeRequestError &&
-    error.status === 403 &&
-    typeof error.reason === "string" &&
-    RETRYABLE_APPROVAL_REASONS.has(error.reason)
-  );
-}
-
 async function withApproval<TPayload>(
   action: string,
   runApprovedRequest: (approvalToken: string) => Promise<TPayload>,
   planId?: string,
 ) {
   const approvalToken = await createApproval(action, planId);
-
-  try {
-    return await runApprovedRequest(approvalToken);
-  } catch (error) {
-    if (!isRetryableApprovalError(error)) throw error;
-
-    const freshApprovalToken = await createApproval(action, planId);
-    return runApprovedRequest(freshApprovalToken);
-  }
+  return runApprovedRequest(approvalToken);
 }
 
 export function buildWritePlan(path: string, answers: UserAnswerState) {
@@ -256,15 +234,13 @@ export async function generateProject(plan: WritePlan) {
 }
 
 export async function connectAppStoreConnect(draft: AppleCredentialDraft) {
-  return withApproval("asc-connect", (approvalToken) =>
-    bridgePost<AppStoreConnectConnectionResult>("/api/bridge/asc/connect", {
-      issuerId: draft.issuerId,
-      keyId: draft.keyId,
-      appAppleId: draft.appAppleId,
-      bundleId: draft.bundleId,
-      privateKeyInput: draft.privateKeyInput,
-      approvalToken,
-    }));
+  return bridgePost<AppStoreConnectConnectionResult>("/api/bridge/asc/connect", {
+    issuerId: draft.issuerId,
+    keyId: draft.keyId,
+    appAppleId: draft.appAppleId,
+    bundleId: draft.bundleId,
+    privateKeyInput: draft.privateKeyInput,
+  });
 }
 
 export function readAppStoreConnect() {
