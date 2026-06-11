@@ -109,6 +109,21 @@ function addChange(changes, key, currentValue, proposedValue) {
   });
 }
 
+function parseAssociatedDomainsAnswer(answer, currentDomains = []) {
+  const tokens = answer
+    .split(/[\s,]+/)
+    .map((domain) => domain.trim())
+    .filter(Boolean);
+  const hasCollapsedDisplayToken = tokens.some((token) => token === "외" || /^\d+개$/.test(token));
+  const domains = tokens.filter((token) => token.includes(":") && token !== "외" && !/^\d+개$/.test(token));
+
+  if (hasCollapsedDisplayToken && currentDomains.length > domains.length) {
+    return currentDomains;
+  }
+
+  return domains;
+}
+
 function buildProjectOperation(scanResult, answers) {
   const target = firstApplicationTarget(scanResult);
   const projectSpec = scanResult.files.projectSpec;
@@ -220,11 +235,8 @@ function buildEntitlementsOperation(scanResult, answers) {
   }
 
   if (associatedDomainAnswer) {
-    const nextDomains = associatedDomainAnswer
-      .split(/[\s,]+/)
-      .map((domain) => domain.trim())
-      .filter(Boolean);
     const currentDomains = parsed.associatedDomains ?? [];
+    const nextDomains = parseAssociatedDomainsAnswer(associatedDomainAnswer, currentDomains);
     values.associatedDomains = nextDomains;
 
     if (currentDomains.join(",") !== nextDomains.join(",")) {

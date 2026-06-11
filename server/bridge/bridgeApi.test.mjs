@@ -587,6 +587,34 @@ describe("bridge API foundation", () => {
     ]);
   });
 
+  it("does not write collapsed associated-domain display text into entitlements", async () => {
+    const appPath = await copyFixtureApp();
+    const baseUrl = await createTestServer();
+    const pairing = await pairBridge(baseUrl);
+    const headers = {
+      authorization: `Bearer ${pairing.pairingToken}`,
+      "content-type": "application/json",
+    };
+
+    const planResponse = await fetch(`${baseUrl}/api/bridge/build-write-plan`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        path: appPath,
+        answers: {
+          capabilities: {
+            "capabilities.choices.0": ["Apple 로그인 사용", "웹사이트 링크 연결"],
+            "앱과 연결할 웹사이트 주소": "applinks:example.com 외 1개",
+          },
+        },
+      }),
+    });
+    const plan = await readJson(planResponse);
+
+    expect(planResponse.status).toBe(200);
+    expect(plan.operations).toEqual([]);
+  });
+
   it("runs xcodegen generate through the paired bridge with a generate backup", async () => {
     const appPath = await copyFixtureApp();
     const fakeXcodegen = path.join(activeTempDir, "fake-xcodegen");
