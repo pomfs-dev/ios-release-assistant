@@ -175,6 +175,76 @@ export default function App() {
   }, [preflight, steps]);
   const activeAction = useMemo(() => {
     const baseAction = actionViews[activeActionKey] ?? actionViews["load-folder"];
+    if (activeActionKey === "review-confirm") {
+      if (safeWrite.status === "planning") {
+        return {
+          ...baseAction,
+          title: "쓰기 계획을 만들고 있습니다.",
+          copy:
+            "현재 입력값과 스캔 결과를 비교해 실제로 바뀔 파일 목록을 계산하는 중입니다.",
+          tag: "계획 중",
+          steps: [
+            ["쓰기 계획 생성 중", "project.yml, Info.plist, Entitlements 변경 후보를 계산합니다."],
+            ["변경 목록 확인", "계획이 준비되면 파일 작업 수와 대상 파일을 보여줍니다."],
+            ["승인 후 실행", "백업, 저장 적용, xcodegen generate는 각각 승인 뒤 실행합니다."],
+          ] as [string, string][],
+          facts: [
+            ["파일 변경", "계산 중"],
+            ["명령 실행", "대기"],
+            ["다음", "계획 결과 확인"],
+          ] as [string, string][],
+          footer: "잠시만 기다려 주세요. 완료되면 Backup + Safe Write 영역으로 이동합니다.",
+          footerActionLabel: undefined,
+        };
+      }
+
+      if (safeWrite.status === "planned" && safeWrite.plan) {
+        return {
+          ...baseAction,
+          title: "쓰기 계획이 준비됐습니다.",
+          copy:
+            "이제 변경 예정 파일을 확인하고, 백업과 저장 적용을 각각 승인할 수 있습니다.",
+          tag: "계획 준비",
+          steps: [
+            [
+              "변경 목록 확인",
+              `${safeWrite.plan.operationCount}개 파일 작업을 Backup + Safe Write 영역에서 확인합니다.`,
+            ],
+            ["백업 승인", "파일 변경이 있으면 원본 백업을 먼저 만듭니다."],
+            ["저장 또는 생성 실행", "저장 적용과 xcodegen generate를 별도 승인 후 실행합니다."],
+          ] as [string, string][],
+          facts: [
+            ["파일 작업", `${safeWrite.plan.operationCount}개`],
+            ["Plan ID", safeWrite.plan.id.slice(0, 8)],
+            ["다음", safeWrite.plan.operationCount > 0 ? "백업 승인" : "프로젝트 생성 승인"],
+          ] as [string, string][],
+          footer: "아래 또는 오른쪽의 Backup + Safe Write에서 체크박스를 확인한 뒤 다음 실행 버튼을 누릅니다.",
+          footerActionLabel: "승인 단계 보기",
+        };
+      }
+
+      if (safeWrite.status === "error") {
+        return {
+          ...baseAction,
+          title: "쓰기 계획을 만들지 못했습니다.",
+          copy: safeWrite.error ?? "local bridge 요청이 실패했습니다. 다시 시도해 주세요.",
+          tag: "확인 필요",
+          steps: [
+            ["오류 확인", "Backup + Safe Write 영역에 표시된 오류를 확인합니다."],
+            ["입력값 확인", "앱 폴더 경로와 현재 질문 값을 확인합니다."],
+            ["다시 시도", "문제가 정리되면 쓰기 계획을 다시 만듭니다."],
+          ] as [string, string][],
+          facts: [
+            ["상태", "실패"],
+            ["파일 변경", "계획 전"],
+            ["다음", "다시 시도"],
+          ] as [string, string][],
+          footer: "오류가 계속되면 앱 폴더를 다시 읽은 뒤 Review & Confirm을 다시 열어 주세요.",
+          footerActionLabel: "다시 시도",
+        };
+      }
+    }
+
     if (activeActionKey !== "load-folder") return baseAction;
 
     const trimmedPath = folderPath.trim();
@@ -265,6 +335,9 @@ export default function App() {
     folderPath,
     nextPendingCheck,
     reviewCount,
+    safeWrite.error,
+    safeWrite.plan,
+    safeWrite.status,
     scanState,
     scannedSummary?.appName,
     steps,
@@ -581,6 +654,11 @@ export default function App() {
     }
 
     if (activeActionKey === "review-confirm") {
+      if (safeWrite.plan && safeWrite.status !== "error") {
+        revealSafeWrite();
+        return;
+      }
+
       void handleBuildWritePlan();
       return;
     }
@@ -600,6 +678,15 @@ export default function App() {
         block: "start",
       });
     });
+  }
+
+  function revealSafeWrite() {
+    window.setTimeout(() => {
+      document.querySelector<HTMLElement>(".safe-write-panel")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 0);
   }
 
   function handleSetupNext() {
@@ -755,6 +842,7 @@ export default function App() {
         generateResult: null,
         error: null,
       });
+      revealSafeWrite();
     } catch (error) {
       setSafeWrite({
         status: "error",
@@ -764,6 +852,7 @@ export default function App() {
         generateResult: null,
         error: error instanceof Error ? error.message : "쓰기 계획을 만들지 못했습니다.",
       });
+      revealSafeWrite();
     }
   }
 
