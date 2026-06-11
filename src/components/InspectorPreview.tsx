@@ -82,6 +82,7 @@ export function InspectorPreview({
   const warningCount = shownChecks.filter((check) => check.status !== "ok").length;
   const canBuildPlan = Boolean(onBuildWritePlan);
   const hasFileChanges = Boolean(safeWrite?.plan && safeWrite.plan.operationCount > 0);
+  const generated = safeWrite?.status === "generated";
   const canConfirmBackup = Boolean(
     onBackupWritePlan && hasFileChanges && !safeWrite?.backup,
   );
@@ -89,7 +90,8 @@ export function InspectorPreview({
     onApplyWritePlan &&
       hasFileChanges &&
       safeWrite?.backup &&
-      safeWrite?.status !== "applied",
+      safeWrite?.status !== "applied" &&
+      !generated,
   );
   const canBackup = canConfirmBackup && backupConfirmed && safeWrite?.status !== "backing-up";
   const canApply = canConfirmApply && applyConfirmed && safeWrite?.status !== "applying";
@@ -479,7 +481,11 @@ export function InspectorPreview({
                   disabled={!canApply || safeWrite?.status === "applying"}
                   onClick={onApplyWritePlan}
                 >
-                  {safeWrite?.status === "applying" ? "저장 적용 중..." : "저장 적용"}
+                  {safeWrite?.status === "applying"
+                    ? "저장 적용 중..."
+                    : generated
+                      ? "저장 적용 완료"
+                      : "저장 적용"}
                 </button>
                 <button
                   type="button"
@@ -487,7 +493,11 @@ export function InspectorPreview({
                   disabled={!canGenerate || safeWrite?.status === "generating"}
                   onClick={onGenerateProject}
                 >
-                  {safeWrite?.status === "generating" ? "프로젝트 생성 중..." : "Xcode 프로젝트 생성"}
+                  {safeWrite?.status === "generating"
+                    ? "프로젝트 생성 중..."
+                    : generated
+                      ? "프로젝트 생성 완료"
+                      : "Xcode 프로젝트 생성"}
                 </button>
               </div>
             </div>
