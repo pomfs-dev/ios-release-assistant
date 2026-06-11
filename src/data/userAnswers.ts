@@ -41,6 +41,25 @@ export function updateUserAnswer(
   };
 }
 
+export function confirmStepAnswers(
+  answers: UserAnswerState,
+  step: StepDefinition,
+): UserAnswerState {
+  const nextStepAnswers = { ...(answers[step.id] ?? {}) };
+
+  step.fields.forEach((field, index) => {
+    if (field.kind === "note") return;
+
+    const key = getFieldAnswerKey(step.id, field, index);
+    nextStepAnswers[key] = getEffectiveFieldAnswer(answers, step.id, field, index);
+  });
+
+  return {
+    ...answers,
+    [step.id]: nextStepAnswers,
+  };
+}
+
 function findStep(steps: StepDefinition[], stepId: string) {
   return steps.find((step) => step.id === stepId) ?? null;
 }

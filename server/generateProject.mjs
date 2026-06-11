@@ -7,7 +7,6 @@ import { redactSecrets } from "./bridge/redaction.mjs";
 import { scanFolder } from "./scanFolder.mjs";
 
 const execFileAsync = promisify(execFile);
-export const GENERATE_CONFIRMATION_TOKEN = "CONFIRM_GENERATE";
 
 function httpError(message, statusCode = 400) {
   const error = new Error(message);
@@ -89,11 +88,7 @@ async function createGenerateBackup(scanResult, planId) {
   return manifest;
 }
 
-export async function generateXcodeProject(plan, confirmationToken, options = {}) {
-  if (confirmationToken !== GENERATE_CONFIRMATION_TOKEN) {
-    throw httpError("generate 승인 토큰이 올바르지 않습니다.", 403);
-  }
-
+export async function generateXcodeProject(plan, options = {}) {
   if (!plan?.rootPath) throw httpError("generate에 사용할 write plan이 없습니다.", 404);
   if (plan.operationCount > 0 && !plan.applyResult?.ok) {
     throw httpError("파일 변경이 있는 write plan은 백업과 저장 적용을 완료한 뒤 generate할 수 있습니다.", 409);

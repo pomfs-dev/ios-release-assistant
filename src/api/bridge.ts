@@ -6,6 +6,7 @@ import type {
   AppStoreConnectUpdateResult,
   AppleCredentialDraft,
   BackupResult,
+  FolderScanResult,
   GenerateProjectResult,
   LocalPathSelection,
   LocalScreenshotSelection,
@@ -14,24 +15,27 @@ import type {
   WritePlan,
 } from "../types";
 
-const BACKUP_CONFIRMATION_TOKEN = "CONFIRM_BACKUP";
-const WRITE_CONFIRMATION_TOKEN = "CONFIRM_WRITE";
-const GENERATE_CONFIRMATION_TOKEN = "CONFIRM_GENERATE";
-const ASC_CONNECT_CONFIRMATION_TOKEN = "CONFIRM_ASC_CONNECT";
-const ASC_UPDATE_CONFIRMATION_TOKEN = "CONFIRM_ASC_UPDATE";
 const BRIDGE_TIMEOUT_MS = 18_000;
 const GENERATE_TIMEOUT_MS = 180_000;
+const SCAN_TIMEOUT_MS = 35_000;
 
 let pairingToken: string | null = null;
+let pairingPromise: Promise<string> | null = null;
 
 export class BridgeRequestError extends Error {
   canceled: boolean;
+  reason?: string;
   status: number;
 
-  constructor(message: string, { canceled = false, status = 0 } = {}) {
+  constructor(message: string, { canceled = false, reason, status = 0 }: {
+    canceled?: boolean;
+    reason?: string;
+    status?: number;
+  } = {}) {
     super(message);
     this.name = "BridgeRequestError";
     this.canceled = canceled;
+    this.reason = reason;
     this.status = status;
   }
 }
@@ -42,6 +46,7 @@ async function readPayload(response: Response) {
   if (!response.ok || !payload.ok) {
     throw new BridgeRequestError(payload.error ?? "local bridge 요청이 실패했습니다.", {
       canceled: Boolean(payload.canceled),
+      reason: typeof payload.reason === "string" ? payload.reason : undefined,
       status: response.status,
     });
   }
@@ -74,13 +79,37 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, tim
   }
 }
 
+async function requestPairingToken() {
+  const challengeResponse = await fetch("/api/bridge/pairing/challenge", { method: "POST" });
+  const challenge = await readPayload(challengeResponse);
+  const confirmResponse = await fetch("/api/bridge/pairing/confirm", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      challengeId: challenge.challengeId,
+      pairingCode: challenge.pairingCode,
+    }),
+  });
+  const confirmation = await readPayload(confirmResponse);
+  const confirmedPairingToken =
+    typeof confirmation.pairingToken === "string" ? confirmation.pairingToken : "";
+  if (!confirmedPairingToken) {
+    throw new BridgeRequestError("bridge pairing token 응답이 올바르지 않습니다.", { status: 502 });
+  }
+
+  pairingToken = confirmedPairingToken;
+  return confirmedPairingToken;
+}
+
 async function pairBridge() {
   if (pairingToken) return pairingToken;
 
-  const response = await fetch("/api/bridge/pair", { method: "POST" });
-  const payload = await readPayload(response);
-  pairingToken = payload.pairingToken;
-  return pairingToken;
+  pairingPromise ??= requestPairingToken().finally(() => {
+    pairingPromise = null;
+  });
+  return pairingPromise;
 }
 
 async function bridgePost<TPayload>(
@@ -90,12 +119,18 @@ async function bridgePost<TPayload>(
   timeoutMs = BRIDGE_TIMEOUT_MS,
 ): Promise<TPayload> {
   const token = await pairBridge();
+  const approvalToken = typeof body.approvalToken === "string" ? body.approvalToken.trim() : "";
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${token}`,
+    "content-type": "application/json",
+  };
+  if (approvalToken) {
+    headers["x-ios-release-assistant-approval-token"] = approvalToken;
+  }
+
   const response = await fetchWithTimeout(path, {
     method: "POST",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json",
-    },
+    headers,
     body: JSON.stringify(body),
   }, timeoutMs);
 
@@ -108,6 +143,7 @@ async function bridgePost<TPayload>(
       error.status === 401
     ) {
       pairingToken = null;
+      pairingPromise = null;
       return bridgePost<TPayload>(path, body, false, timeoutMs);
     }
 
@@ -115,8 +151,29 @@ async function bridgePost<TPayload>(
   }
 }
 
+async function createApproval(action: string, planId?: string) {
+  const approval = await bridgePost<{ approvalToken: string }>("/api/bridge/approvals", {
+    action,
+    ...(planId ? { planId } : {}),
+  });
+  return approval.approvalToken;
+}
+
+async function withApproval<TPayload>(
+  action: string,
+  runApprovedRequest: (approvalToken: string) => Promise<TPayload>,
+  planId?: string,
+) {
+  const approvalToken = await createApproval(action, planId);
+  return runApprovedRequest(approvalToken);
+}
+
 export function buildWritePlan(path: string, answers: UserAnswerState) {
   return bridgePost<WritePlan>("/api/bridge/build-write-plan", { path, answers });
+}
+
+export function scanFolder(path: string) {
+  return bridgePost<FolderScanResult>("/api/bridge/scan-folder", { path }, true, SCAN_TIMEOUT_MS);
 }
 
 export function selectFolder() {
@@ -135,35 +192,54 @@ export function browseServerPath(path?: string) {
   return bridgePost<ServerBrowserListing>("/api/bridge/browse-path", { path });
 }
 
-export function backupWritePlan(plan: WritePlan) {
-  return bridgePost<BackupResult>("/api/bridge/backup", {
-    planId: plan.id,
-    confirmationToken: BACKUP_CONFIRMATION_TOKEN,
-  });
+export async function backupWritePlan(plan: WritePlan) {
+  return withApproval(
+    "backup",
+    (approvalToken) =>
+      bridgePost<BackupResult>("/api/bridge/backup", {
+        planId: plan.id,
+        approvalToken,
+      }),
+    plan.id,
+  );
 }
 
-export function applyWritePlan(plan: WritePlan) {
-  return bridgePost<ApplyWritePlanResult>("/api/bridge/apply-write-plan", {
-    planId: plan.id,
-    confirmationToken: WRITE_CONFIRMATION_TOKEN,
-  });
+export async function applyWritePlan(plan: WritePlan) {
+  return withApproval(
+    "apply-write-plan",
+    (approvalToken) =>
+      bridgePost<ApplyWritePlanResult>("/api/bridge/apply-write-plan", {
+        planId: plan.id,
+        approvalToken,
+      }),
+    plan.id,
+  );
 }
 
-export function generateProject(plan: WritePlan) {
-  return bridgePost<GenerateProjectResult>("/api/bridge/generate", {
-    planId: plan.id,
-    confirmationToken: GENERATE_CONFIRMATION_TOKEN,
-  }, false, GENERATE_TIMEOUT_MS);
+export async function generateProject(plan: WritePlan) {
+  return withApproval(
+    "generate",
+    (approvalToken) =>
+      bridgePost<GenerateProjectResult>(
+        "/api/bridge/generate",
+        {
+          planId: plan.id,
+          approvalToken,
+        },
+        false,
+        GENERATE_TIMEOUT_MS,
+      ),
+    plan.id,
+  );
 }
 
-export function connectAppStoreConnect(draft: AppleCredentialDraft) {
+export async function connectAppStoreConnect(draft: AppleCredentialDraft) {
   return bridgePost<AppStoreConnectConnectionResult>("/api/bridge/asc/connect", {
     issuerId: draft.issuerId,
     keyId: draft.keyId,
     appAppleId: draft.appAppleId,
     bundleId: draft.bundleId,
     privateKeyInput: draft.privateKeyInput,
-    confirmationToken: ASC_CONNECT_CONFIRMATION_TOKEN,
   });
 }
 
@@ -175,9 +251,14 @@ export function buildAppStoreConnectUpdatePlan(answers: UserAnswerState) {
   return bridgePost<AppStoreConnectUpdatePlan>("/api/bridge/asc/build-update-plan", { answers });
 }
 
-export function updateAppStoreConnectDraft(plan: AppStoreConnectUpdatePlan) {
-  return bridgePost<AppStoreConnectUpdateResult>("/api/bridge/asc/update-draft", {
-    planId: plan.id,
-    confirmationToken: ASC_UPDATE_CONFIRMATION_TOKEN,
-  });
+export async function updateAppStoreConnectDraft(plan: AppStoreConnectUpdatePlan) {
+  return withApproval(
+    "asc-update-draft",
+    (approvalToken) =>
+      bridgePost<AppStoreConnectUpdateResult>("/api/bridge/asc/update-draft", {
+        planId: plan.id,
+        approvalToken,
+      }),
+    plan.id,
+  );
 }

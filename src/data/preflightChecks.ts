@@ -30,13 +30,22 @@ function manualStatus(id: string, confirmedCheckIds: ReadonlySet<string>) {
   return confirmedCheckIds.has(id) ? "ok" : "warn";
 }
 
+function confirmationStatus(
+  id: string,
+  confirmedCheckIds: ReadonlySet<string>,
+  confirmedByStepAnswer = false,
+) {
+  return confirmedByStepAnswer || confirmedCheckIds.has(id) ? "ok" : "warn";
+}
+
 function manualTitle(
   id: string,
   confirmedCheckIds: ReadonlySet<string>,
   pendingTitle: string,
   doneTitle: string,
+  confirmedByStepAnswer = false,
 ) {
-  return confirmedCheckIds.has(id) ? doneTitle : pendingTitle;
+  return confirmedByStepAnswer || confirmedCheckIds.has(id) ? doneTitle : pendingTitle;
 }
 
 function explicitChoiceAnswer(
@@ -48,7 +57,15 @@ function explicitChoiceAnswer(
   return Array.isArray(value) ? value : [];
 }
 
-function maybeCapabilityChecks(summary: AppScanSummary, confirmedCheckIds: ReadonlySet<string>) {
+function hasExplicitStepAnswers(answers: UserAnswerState, stepId: string) {
+  return Object.keys(answers[stepId] ?? {}).length > 0;
+}
+
+function maybeCapabilityChecks(
+  summary: AppScanSummary,
+  confirmedCheckIds: ReadonlySet<string>,
+  capabilitiesConfirmed: boolean,
+) {
   const checks: PreflightCheck[] = [];
 
   if (hasCapability(summary, "com.apple.developer.applesignin")) {
@@ -57,14 +74,15 @@ function maybeCapabilityChecks(summary: AppScanSummary, confirmedCheckIds: Reado
       check(
         id,
         "capabilities",
-        manualStatus(id, confirmedCheckIds),
+        confirmationStatus(id, confirmedCheckIds, capabilitiesConfirmed),
         manualTitle(
           id,
           confirmedCheckIds,
           "Apple 로그인 사이트 설정 확인",
           "Apple 로그인 사이트 설정 확인됨",
+          capabilitiesConfirmed,
         ),
-        confirmedCheckIds.has(id)
+        capabilitiesConfirmed || confirmedCheckIds.has(id)
           ? "Apple Developer Identifier의 Apple 로그인 설정을 확인했습니다."
           : "Entitlements에는 Apple 로그인 권한이 있습니다. Apple Developer Identifier에서도 같은 기능이 켜져 있어야 합니다.",
         "manual",
@@ -78,14 +96,15 @@ function maybeCapabilityChecks(summary: AppScanSummary, confirmedCheckIds: Reado
       check(
         id,
         "capabilities",
-        manualStatus(id, confirmedCheckIds),
+        confirmationStatus(id, confirmedCheckIds, capabilitiesConfirmed),
         manualTitle(
           id,
           confirmedCheckIds,
           "Associated Domains 웹사이트 파일 확인",
           "Associated Domains 웹사이트 파일 확인됨",
+          capabilitiesConfirmed,
         ),
-        confirmedCheckIds.has(id)
+        capabilitiesConfirmed || confirmedCheckIds.has(id)
           ? "웹사이트의 apple-app-site-association 파일을 확인했습니다."
           : "웹 링크 기능은 앱 권한 파일뿐 아니라 웹사이트의 apple-app-site-association 파일도 필요합니다.",
         "manual",
@@ -99,14 +118,15 @@ function maybeCapabilityChecks(summary: AppScanSummary, confirmedCheckIds: Reado
       check(
         id,
         "capabilities",
-        manualStatus(id, confirmedCheckIds),
+        confirmationStatus(id, confirmedCheckIds, capabilitiesConfirmed),
         manualTitle(
           id,
           confirmedCheckIds,
           "Push 알림 인증 설정 확인",
           "Push 알림 인증 설정 확인됨",
+          capabilitiesConfirmed,
         ),
-        confirmedCheckIds.has(id)
+        capabilitiesConfirmed || confirmedCheckIds.has(id)
           ? "Apple Developer와 서버 알림 인증 설정을 확인했습니다."
           : "Push 알림 권한이 켜져 있습니다. Apple Developer와 서버 알림 인증 설정을 함께 확인해야 합니다.",
         "manual",
@@ -132,6 +152,7 @@ export function derivePreflightSummary(
   const hasTeamId = Boolean(summary.developmentTeam || teamIdAnswer);
   const hasPrivacyUrl = Boolean(privacyUrlAnswer);
   const hasDemoAccount = Boolean(demoAccountAnswer);
+  const capabilitiesConfirmed = hasExplicitStepAnswers(answers, "capabilities");
   const screenshotsId = "screenshots";
   const selectedReviewAccess = explicitChoiceAnswer(answers, "store", "심사 접근 방식");
   const selectedMediaAssets = explicitChoiceAnswer(answers, "store", "App Store 미디어 자산");
@@ -218,7 +239,7 @@ export function derivePreflightSummary(
         ? summary.capabilities.map((capability) => capability.label).join(" · ")
         : "권한 파일에서 출시 관련 Apple 기능을 찾지 못했습니다.",
     ),
-    ...maybeCapabilityChecks(summary, confirmedCheckIds),
+    ...maybeCapabilityChecks(summary, confirmedCheckIds, capabilitiesConfirmed),
     check(
       "app-store-privacy",
       "store",

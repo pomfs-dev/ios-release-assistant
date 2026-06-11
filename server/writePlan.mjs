@@ -9,9 +9,6 @@ import { scanFolder } from "./scanFolder.mjs";
 
 const execFileAsync = promisify(execFile);
 const BACKUP_DIR_NAME = ".release-assistant-backups";
-const BACKUP_CONFIRMATION_TOKEN = "CONFIRM_BACKUP";
-const WRITE_CONFIRMATION_TOKEN = "CONFIRM_WRITE";
-const GENERATE_CONFIRMATION_TOKEN = "CONFIRM_GENERATE";
 
 const PRIVACY_LABEL_TO_KEY = {
   "Apple Music": "NSAppleMusicUsageDescription",
@@ -110,6 +107,21 @@ function addChange(changes, key, currentValue, proposedValue) {
     currentValue: currentValue ?? "",
     proposedValue,
   });
+}
+
+function parseAssociatedDomainsAnswer(answer, currentDomains = []) {
+  const tokens = answer
+    .split(/[\s,]+/)
+    .map((domain) => domain.trim())
+    .filter(Boolean);
+  const hasCollapsedDisplayToken = tokens.some((token) => token === "외" || /^\d+개$/.test(token));
+  const domains = tokens.filter((token) => token.includes(":") && token !== "외" && !/^\d+개$/.test(token));
+
+  if (hasCollapsedDisplayToken && currentDomains.length > domains.length) {
+    return currentDomains;
+  }
+
+  return domains;
 }
 
 function buildProjectOperation(scanResult, answers) {
@@ -223,11 +235,8 @@ function buildEntitlementsOperation(scanResult, answers) {
   }
 
   if (associatedDomainAnswer) {
-    const nextDomains = associatedDomainAnswer
-      .split(/[\s,]+/)
-      .map((domain) => domain.trim())
-      .filter(Boolean);
     const currentDomains = parsed.associatedDomains ?? [];
+    const nextDomains = parseAssociatedDomainsAnswer(associatedDomainAnswer, currentDomains);
     values.associatedDomains = nextDomains;
 
     if (currentDomains.join(",") !== nextDomains.join(",")) {
@@ -414,11 +423,6 @@ export async function buildWritePlan(inputPath, answers = {}) {
     operations,
     operationCount: operations.length,
     requiresBackup: operations.length > 0,
-    confirmation: {
-      backup: BACKUP_CONFIRMATION_TOKEN,
-      apply: WRITE_CONFIRMATION_TOKEN,
-      generate: GENERATE_CONFIRMATION_TOKEN,
-    },
   };
 }
 
@@ -516,11 +520,7 @@ export function createWritePlanManager() {
       plans.set(plan.id, plan);
       return plan;
     },
-    async backup(planId, confirmationToken) {
-      if (confirmationToken !== BACKUP_CONFIRMATION_TOKEN) {
-        throw httpError("백업 승인 토큰이 올바르지 않습니다.", 403);
-      }
-
+    async backup(planId) {
       const plan = plans.get(planId);
       if (!plan) throw httpError("write plan을 찾지 못했습니다.", 404);
       const result = await createBackupForPlan(plan);
@@ -528,11 +528,7 @@ export function createWritePlanManager() {
       plans.set(plan.id, plan);
       return result;
     },
-    async apply(planId, confirmationToken) {
-      if (confirmationToken !== WRITE_CONFIRMATION_TOKEN) {
-        throw httpError("저장 승인 토큰이 올바르지 않습니다.", 403);
-      }
-
+    async apply(planId) {
       const plan = plans.get(planId);
       if (!plan) throw httpError("write plan을 찾지 못했습니다.", 404);
       const result = await applyWritePlan(plan);

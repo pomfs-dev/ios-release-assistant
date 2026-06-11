@@ -96,7 +96,7 @@ function capabilityFields(summary: NonNullable<ReturnType<typeof getAppScanSumma
     {
       kind: "text",
       label: "앱과 연결할 웹사이트 주소",
-      value: formatScanList(summary.associatedDomains, "", 1),
+      value: summary.associatedDomains.join(", "),
       placeholder: "applinks:example.com",
       helper: "Domains",
     },

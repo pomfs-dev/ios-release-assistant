@@ -1,8 +1,5 @@
 import crypto from "node:crypto";
 
-export const ASC_CONNECT_CONFIRMATION_TOKEN = "CONFIRM_ASC_CONNECT";
-export const ASC_UPDATE_CONFIRMATION_TOKEN = "CONFIRM_ASC_UPDATE";
-
 const APP_STORE_CONNECT_AUDIENCE = "appstoreconnect-v1";
 const DEFAULT_BASE_URL = "https://api.appstoreconnect.apple.com";
 const DEFAULT_TOKEN_TTL_SECONDS = 15 * 60;
@@ -383,9 +380,6 @@ export function createAppStoreConnectManager({
       operations,
       operationCount: operations.length,
       manualItems,
-      confirmation: {
-        update: ASC_UPDATE_CONFIRMATION_TOKEN,
-      },
     };
     updatePlans.set(plan.id, plan);
     return plan;
@@ -428,11 +422,7 @@ export function createAppStoreConnectManager({
   }
 
   return {
-    async connect(input, confirmationToken) {
-      if (confirmationToken !== ASC_CONNECT_CONFIRMATION_TOKEN) {
-        throw httpError("Apple 연결 승인 토큰이 올바르지 않습니다.", 403);
-      }
-
+    async connect(input) {
       const issuerId = trimString(input?.issuerId);
       const keyId = trimString(input?.keyId);
       const appAppleId = trimString(input?.appAppleId);
@@ -501,11 +491,7 @@ export function createAppStoreConnectManager({
       return updatePlans.get(planId) ?? null;
     },
 
-    async updateDraft(planId, confirmationToken) {
-      if (confirmationToken !== ASC_UPDATE_CONFIRMATION_TOKEN) {
-        throw httpError("App Store Connect 업데이트 승인 토큰이 올바르지 않습니다.", 403);
-      }
-
+    async updateDraft(planId) {
       const plan = updatePlans.get(planId);
       if (!plan) throw httpError("App Store Connect 업데이트 계획을 찾지 못했습니다.", 404);
 

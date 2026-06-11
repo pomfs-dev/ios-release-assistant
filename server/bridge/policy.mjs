@@ -1,5 +1,5 @@
 const BRIDGE_HEADER_ALLOWLIST =
-  "content-type, authorization, x-ios-release-assistant-pairing-token";
+  "content-type, authorization, x-ios-release-assistant-pairing-token, x-ios-release-assistant-approval-token";
 
 export const ENDPOINT_POLICIES = [
   {
@@ -8,18 +8,47 @@ export const ENDPOINT_POLICIES = [
     access: "public",
     requiresPairing: false,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
     method: "POST",
     path: "/api/bridge/pair",
+    access: "deprecated",
+    requiresPairing: false,
+    requiresPlanId: false,
+    requiresApproval: false,
+    mutation: false,
+    returnsProjectData: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/pairing/challenge",
     access: "pairing",
     requiresPairing: false,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
     returnsProjectData: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/pairing/confirm",
+    access: "pairing",
+    requiresPairing: false,
+    requiresPlanId: false,
+    requiresApproval: false,
+    mutation: false,
+    returnsProjectData: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/approvals",
+    access: "paired-approval",
+    requiresPairing: true,
+    requiresPlanId: false,
+    requiresApproval: false,
+    mutation: false,
   },
   {
     method: "POST",
@@ -27,7 +56,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-project-data",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -36,7 +65,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-local-file-browser",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -45,7 +74,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-local-file-picker",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -54,7 +83,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-local-file-picker",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -63,7 +92,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-local-file-picker",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -72,7 +101,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-planning",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -81,7 +110,8 @@ export const ENDPOINT_POLICIES = [
     access: "paired-mutation",
     requiresPairing: true,
     requiresPlanId: true,
-    requiresConfirmationToken: true,
+    requiresApproval: true,
+    approvalAction: "backup",
     mutation: true,
   },
   {
@@ -90,7 +120,8 @@ export const ENDPOINT_POLICIES = [
     access: "paired-mutation",
     requiresPairing: true,
     requiresPlanId: true,
-    requiresConfirmationToken: true,
+    requiresApproval: true,
+    approvalAction: "apply-write-plan",
     mutation: true,
   },
   {
@@ -99,7 +130,8 @@ export const ENDPOINT_POLICIES = [
     access: "paired-mutation",
     requiresPairing: true,
     requiresPlanId: true,
-    requiresConfirmationToken: true,
+    requiresApproval: true,
+    approvalAction: "generate",
     mutation: true,
   },
   {
@@ -108,7 +140,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-sensitive-session",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: true,
+    requiresApproval: false,
     mutation: false,
     sessionMemoryOnly: true,
   },
@@ -118,7 +150,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-project-data",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -127,7 +159,7 @@ export const ENDPOINT_POLICIES = [
     access: "paired-planning",
     requiresPairing: true,
     requiresPlanId: false,
-    requiresConfirmationToken: false,
+    requiresApproval: false,
     mutation: false,
   },
   {
@@ -136,7 +168,8 @@ export const ENDPOINT_POLICIES = [
     access: "paired-mutation",
     requiresPairing: true,
     requiresPlanId: true,
-    requiresConfirmationToken: true,
+    requiresApproval: true,
+    approvalAction: "asc-update-draft",
     mutation: true,
   },
 ];
@@ -159,16 +192,6 @@ export function createAllowedOriginAllowlist(port, extraOrigins = process.env.BR
   return origins;
 }
 
-function isLoopbackOrigin(origin) {
-  try {
-    const parsed = new URL(origin);
-    if (!["http:", "https:"].includes(parsed.protocol)) return false;
-    return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(parsed.hostname);
-  } catch {
-    return false;
-  }
-}
-
 export function getEndpointPolicy(method, pathname) {
   const normalizedMethod = method.toUpperCase();
   return (
@@ -188,7 +211,7 @@ export function getCorsHeaders(request, allowedOrigins) {
   const origin = request.headers.origin;
   if (typeof origin !== "string") return { allowed: true, headers: {} };
 
-  if (!allowedOrigins.has(origin) && !isLoopbackOrigin(origin)) {
+  if (!allowedOrigins.has(origin)) {
     return { allowed: false, headers: {} };
   }
 

@@ -172,6 +172,24 @@ describe("derivePreflightSummary", () => {
       title: "생성 전 백업 확인됨",
     });
   });
+
+  it("closes Apple capability follow-up checks when the capability step is confirmed", () => {
+    const preflight = derivePreflightSummary(completeFolderScanResult, {
+      capabilities: {
+        "capabilities.choices.0": ["Apple 로그인 사용", "웹사이트 링크 연결"],
+        "앱과 연결할 웹사이트 주소": "applinks:example.com",
+      },
+    });
+
+    expect(findCheck(preflight, "apple-sign-in-portal")).toMatchObject({
+      status: "ok",
+      title: "Apple 로그인 사이트 설정 확인됨",
+    });
+    expect(findCheck(preflight, "associated-domains-site")).toMatchObject({
+      status: "ok",
+      title: "Associated Domains 웹사이트 파일 확인됨",
+    });
+  });
 });
 
 describe("deriveReleaseSteps", () => {

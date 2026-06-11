@@ -12,9 +12,12 @@ type SetupWizardProps = {
     fieldLabel: string | null;
     token: number;
   } | null;
+  nextLabel?: string;
+  showSkip?: boolean;
   onAnswerChange: (stepId: string, key: string, value: UserAnswerValue) => void;
   onGoNext: () => void;
   onGoPrevious: () => void;
+  onSkip?: () => void;
 };
 
 type FieldRendererProps = {
@@ -126,9 +129,12 @@ export function SetupWizard({
   answers,
   canGoPrevious,
   focusRequest,
+  nextLabel = "다음 설정",
   onAnswerChange,
   onGoNext,
   onGoPrevious,
+  onSkip,
+  showSkip = true,
   step,
 }: SetupWizardProps) {
   useEffect(() => {
@@ -218,11 +224,13 @@ export function SetupWizard({
           이전
         </button>
         <div>
-          <button type="button" className="secondary" onClick={onGoNext}>
-            질문 건너뛰기
-          </button>
+          {showSkip ? (
+            <button type="button" className="secondary" onClick={onSkip ?? onGoNext}>
+              질문 건너뛰기
+            </button>
+          ) : null}
           <button type="button" className="primary" onClick={onGoNext}>
-            다음 설정
+            {nextLabel}
             <ArrowRight size={16} />
           </button>
         </div>

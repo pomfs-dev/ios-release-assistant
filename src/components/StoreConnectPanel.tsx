@@ -1,66 +1,125 @@
 import { useEffect } from "react";
-import type { AppleConnectionState, AppleCredentialDraft } from "../types";
+import { getAppScanSummary } from "../data/appScanSummary";
+import type {
+  AppleConnectionState,
+  AppleCredentialDraft,
+  FolderScanResult,
+  PreflightCheck,
+  PreflightSummary,
+} from "../types";
 
 type StoreConnectPanelProps = {
   appleConnection: AppleConnectionState;
   appleCredentialDraft: AppleCredentialDraft;
   appleFocusToken: number;
+  preflight?: PreflightSummary | null;
+  scanResult?: FolderScanResult | null;
   onAppleCredentialChange: (field: keyof AppleCredentialDraft, value: string) => void;
   onPrepareAppleSession: () => void;
   onOpenStoreStep: () => void;
 };
 
-const storeTasks = [
+type StoreTask = {
+  state: "" | "warn" | "todo";
+  icon: string;
+  title: string;
+  copy: string;
+  tag: string;
+};
+
+function taskFromCheck(
+  check: PreflightCheck | undefined,
+  title: string,
+  readyCopy: string,
+  fallbackCopy: string,
+  fallbackTag = "확인 필요",
+): StoreTask {
+  if (check?.status === "ok") {
+    return {
+      state: "",
+      icon: "✓",
+      title,
+      copy: readyCopy,
+      tag: "완료",
+    };
+  }
+
+  return {
+    state: check?.status === "error" || check?.status === "warn" ? "warn" : "todo",
+    icon: check?.status === "error" || check?.status === "warn" ? "!" : "·",
+    title,
+    copy: check?.copy ?? fallbackCopy,
+    tag: check?.status === "error" || check?.status === "warn" ? fallbackTag : "준비 전",
+  };
+}
+
+function findCheck(preflight: PreflightSummary | null | undefined, id: string) {
+  return preflight?.checks.find((check) => check.id === id);
+}
+
+function storeTasksFor(
+  scanResult: FolderScanResult | null | undefined,
+  preflight: PreflightSummary | null | undefined,
+): StoreTask[] {
+  const summary = getAppScanSummary(scanResult ?? null);
+  const hasBasicInfo = Boolean(summary?.appName && summary.bundleId);
+
+  return [
   {
-    state: "",
-    icon: "✓",
+    state: hasBasicInfo ? "" : "warn",
+    icon: hasBasicInfo ? "✓" : "!",
     title: "앱스토어 기본 정보",
-    copy: "앱 이름, 부제, 앱 고유 주소, 카테고리, 고객지원 주소를 준비합니다.",
-    tag: "완료",
+    copy: hasBasicInfo
+      ? `${summary?.appName ?? "앱"} · ${summary?.bundleId ?? "Bundle ID"}`
+      : "앱 이름, 부제, 앱 고유 주소, 카테고리, 고객지원 주소를 준비합니다.",
+    tag: hasBasicInfo ? "완료" : "확인 필요",
   },
-  {
-    state: "warn",
-    icon: "!",
-    title: "앱 아이콘",
-    copy: "Xcode asset catalog에 App Store용 1024x1024 아이콘이 들어있는지 확인합니다.",
-    tag: "빌드 포함",
-  },
-  {
-    state: "warn",
-    icon: "!",
-    title: "개인정보와 처리방침",
-    copy: "개인정보 처리방침 주소, 수집하는 데이터 종류, 사용자 선택 안내 주소를 확인합니다.",
-    tag: "확인 필요",
-  },
-  {
-    state: "todo",
-    icon: "·",
-    title: "스크린샷과 앱 미리보기",
-    copy: "iPhone/iPad 스크린샷, 선택 사항인 앱 미리보기 영상을 제출 형식에 맞게 준비합니다.",
-    tag: "준비 전",
-  },
-  {
-    state: "warn",
-    icon: "!",
-    title: "심사용 정보",
-    copy: "로그인이 필요한 앱이면 심사용 계정, 연락처, 심사자에게 남길 설명을 준비합니다.",
-    tag: "확인 필요",
-  },
-  {
-    state: "todo",
-    icon: "·",
-    title: "가격과 출시 국가",
-    copy: "무료/유료 여부, 출시 국가, 예약 주문 여부, 수동 출시 여부를 선택합니다.",
-    tag: "선택 전",
-  },
-  {
-    state: "todo",
-    icon: "·",
-    title: "업로드할 빌드 선택",
-    copy: "Xcode에서 Archive 후 올린 빌드를 App Store Connect에서 선택해 심사에 제출합니다.",
-    tag: "나중에",
-  },
-];
+    taskFromCheck(
+      findCheck(preflight, "app-store-icon"),
+      "앱 아이콘",
+      summary?.appIconSet
+        ? `${summary.appIconSet}에서 App Store용 1024x1024 아이콘을 확인했습니다.`
+        : "App Store용 1024x1024 아이콘을 확인했습니다.",
+      "Xcode asset catalog에 App Store용 1024x1024 아이콘이 들어있는지 확인합니다.",
+      "확인 필요",
+    ),
+    taskFromCheck(
+      findCheck(preflight, "app-store-privacy"),
+      "개인정보와 처리방침",
+      "개인정보 처리방침 주소를 제출 준비 항목에 연결했습니다.",
+      "개인정보 처리방침 주소, 수집하는 데이터 종류, 사용자 선택 안내 주소를 확인합니다.",
+      "확인 필요",
+    ),
+    taskFromCheck(
+      findCheck(preflight, "screenshots"),
+      "스크린샷과 앱 미리보기",
+      "App Store Connect에 올릴 스크린샷 준비 상태를 확인했습니다.",
+      "iPhone/iPad 스크린샷, 선택 사항인 앱 미리보기 영상을 제출 형식에 맞게 준비합니다.",
+      "확인 필요",
+    ),
+    taskFromCheck(
+      findCheck(preflight, "demo-account"),
+      "심사용 정보",
+      "심사용 접근 방식과 데모 계정 정보를 준비했습니다.",
+      "로그인이 필요한 앱이면 심사용 계정, 연락처, 심사자에게 남길 설명을 준비합니다.",
+      "확인 필요",
+    ),
+    {
+      state: "todo",
+      icon: "·",
+      title: "가격과 출시 국가",
+      copy: "무료/유료 여부, 출시 국가, 예약 주문 여부, 수동 출시 여부를 선택합니다.",
+      tag: "선택 전",
+    },
+    {
+      state: "todo",
+      icon: "·",
+      title: "업로드할 빌드 선택",
+      copy: "Xcode에서 Archive 후 올린 빌드를 App Store Connect에서 선택해 심사에 제출합니다.",
+      tag: "나중에",
+    },
+  ];
+}
 
 function connectionStatusLabel(connection: AppleConnectionState) {
   if (connection.status === "ready") return "세션 준비됨";
@@ -77,7 +136,11 @@ export function StoreConnectPanel({
   onAppleCredentialChange,
   onOpenStoreStep,
   onPrepareAppleSession,
+  preflight,
+  scanResult,
 }: StoreConnectPanelProps) {
+  const storeTasks = storeTasksFor(scanResult, preflight);
+
   useEffect(() => {
     if (!appleFocusToken) return;
 

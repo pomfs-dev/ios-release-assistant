@@ -6,18 +6,18 @@ import {
   buildWritePlan,
   connectAppStoreConnect,
   generateProject,
+  scanFolder,
   selectFolder,
   selectProjectSpec,
   selectScreenshot,
 } from "./api/bridge";
-import { scanFolder } from "./api/scanFolder";
 import { actionViews } from "./data/actionViews";
 import { getAppScanSummary } from "./data/appScanSummary";
 import { deriveChangeReviewSummary } from "./data/changeReviewSummary";
 import { deriveReleaseSteps } from "./data/deriveReleaseSteps";
 import { applyPreflightToSteps, derivePreflightSummary } from "./data/preflightChecks";
 import { releaseSteps } from "./data/releaseSteps";
-import { updateUserAnswer } from "./data/userAnswers";
+import { confirmStepAnswers, updateUserAnswer } from "./data/userAnswers";
 import { ActionPreview } from "./components/ActionPreview";
 import { DevNotesModal } from "./components/DevNotesModal";
 import { InspectorPreview } from "./components/InspectorPreview";
@@ -147,6 +147,8 @@ export default function App() {
     () => steps.find((step) => step.id === activeStepId) ?? steps[0],
     [activeStepId, steps],
   );
+  const activeStepIndex = steps.findIndex((step) => step.id === activeStep.id);
+  const isFinalQuestionStep = activeStepIndex === steps.length - 1;
   const completedCount = steps.filter((step) => step.status === "done").length;
   const reviewCount =
     preflight?.reviewCount ?? steps.filter((step) => step.status === "warning").length;
@@ -173,6 +175,76 @@ export default function App() {
   }, [preflight, steps]);
   const activeAction = useMemo(() => {
     const baseAction = actionViews[activeActionKey] ?? actionViews["load-folder"];
+    if (activeActionKey === "review-confirm") {
+      if (safeWrite.status === "planning") {
+        return {
+          ...baseAction,
+          title: "쓰기 계획을 만들고 있습니다.",
+          copy:
+            "현재 입력값과 스캔 결과를 비교해 실제로 바뀔 파일 목록을 계산하는 중입니다.",
+          tag: "계획 중",
+          steps: [
+            ["쓰기 계획 생성 중", "project.yml, Info.plist, Entitlements 변경 후보를 계산합니다."],
+            ["변경 목록 확인", "계획이 준비되면 파일 작업 수와 대상 파일을 보여줍니다."],
+            ["승인 후 실행", "백업, 저장 적용, xcodegen generate는 각각 승인 뒤 실행합니다."],
+          ] as [string, string][],
+          facts: [
+            ["파일 변경", "계산 중"],
+            ["명령 실행", "대기"],
+            ["다음", "계획 결과 확인"],
+          ] as [string, string][],
+          footer: "잠시만 기다려 주세요. 완료되면 Backup + Safe Write 영역으로 이동합니다.",
+          footerActionLabel: undefined,
+        };
+      }
+
+      if (safeWrite.status === "planned" && safeWrite.plan) {
+        return {
+          ...baseAction,
+          title: "쓰기 계획이 준비됐습니다.",
+          copy:
+            "이제 변경 예정 파일을 확인하고, 백업과 저장 적용을 각각 승인할 수 있습니다.",
+          tag: "계획 준비",
+          steps: [
+            [
+              "변경 목록 확인",
+              `${safeWrite.plan.operationCount}개 파일 작업을 Backup + Safe Write 영역에서 확인합니다.`,
+            ],
+            ["백업 승인", "파일 변경이 있으면 원본 백업을 먼저 만듭니다."],
+            ["저장 또는 생성 실행", "저장 적용과 xcodegen generate를 별도 승인 후 실행합니다."],
+          ] as [string, string][],
+          facts: [
+            ["파일 작업", `${safeWrite.plan.operationCount}개`],
+            ["Plan ID", safeWrite.plan.id.slice(0, 8)],
+            ["다음", safeWrite.plan.operationCount > 0 ? "백업 승인" : "프로젝트 생성 승인"],
+          ] as [string, string][],
+          footer: "아래 또는 오른쪽의 Backup + Safe Write에서 체크박스를 확인한 뒤 다음 실행 버튼을 누릅니다.",
+          footerActionLabel: "승인 단계 보기",
+        };
+      }
+
+      if (safeWrite.status === "error") {
+        return {
+          ...baseAction,
+          title: "쓰기 계획을 만들지 못했습니다.",
+          copy: safeWrite.error ?? "local bridge 요청이 실패했습니다. 다시 시도해 주세요.",
+          tag: "확인 필요",
+          steps: [
+            ["오류 확인", "Backup + Safe Write 영역에 표시된 오류를 확인합니다."],
+            ["입력값 확인", "앱 폴더 경로와 현재 질문 값을 확인합니다."],
+            ["다시 시도", "문제가 정리되면 쓰기 계획을 다시 만듭니다."],
+          ] as [string, string][],
+          facts: [
+            ["상태", "실패"],
+            ["파일 변경", "계획 전"],
+            ["다음", "다시 시도"],
+          ] as [string, string][],
+          footer: "오류가 계속되면 앱 폴더를 다시 읽은 뒤 Review & Confirm을 다시 열어 주세요.",
+          footerActionLabel: "다시 시도",
+        };
+      }
+    }
+
     if (activeActionKey !== "load-folder") return baseAction;
 
     const trimmedPath = folderPath.trim();
@@ -263,6 +335,9 @@ export default function App() {
     folderPath,
     nextPendingCheck,
     reviewCount,
+    safeWrite.error,
+    safeWrite.plan,
+    safeWrite.status,
     scanState,
     scannedSummary?.appName,
     steps,
@@ -515,6 +590,7 @@ export default function App() {
     if (!check) {
       setActiveStepId("generate");
       setActiveActionKey("review-confirm");
+      revealReviewConfirm();
       return;
     }
 
@@ -573,10 +649,16 @@ export default function App() {
     if (activeActionKey === "preflight" || activeActionKey === "generate-project") {
       setActiveStepId("generate");
       setActiveActionKey("review-confirm");
+      revealReviewConfirm();
       return;
     }
 
     if (activeActionKey === "review-confirm") {
+      if (safeWrite.plan && safeWrite.status !== "error") {
+        revealSafeWrite();
+        return;
+      }
+
       void handleBuildWritePlan();
       return;
     }
@@ -587,6 +669,36 @@ export default function App() {
       setActiveStepId(nextStep.id);
       setActiveActionKey(nextStep.actionKey);
     }
+  }
+
+  function revealReviewConfirm() {
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(".action-preview")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  function revealSafeWrite() {
+    window.setTimeout(() => {
+      document.querySelector<HTMLElement>(".safe-write-panel")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 0);
+  }
+
+  function handleSetupNext() {
+    const nextAnswers = confirmStepAnswers(answers, activeStep);
+    setAnswers(nextAnswers);
+
+    if (isFinalQuestionStep) {
+      void handleBuildWritePlan(nextAnswers);
+      return;
+    }
+
+    handleQuestionStep(1);
   }
 
   function handleOpenStoreStep() {
@@ -695,7 +807,7 @@ export default function App() {
     }
   }
 
-  async function handleBuildWritePlan() {
+  async function handleBuildWritePlan(answersForPlan: UserAnswerState = answers) {
     if (!scanResult) {
       setSafeWrite({
         status: "error",
@@ -710,6 +822,7 @@ export default function App() {
 
     setActiveStepId("generate");
     setActiveActionKey("review-confirm");
+    revealReviewConfirm();
     setSafeWrite({
       status: "planning",
       plan: null,
@@ -720,7 +833,7 @@ export default function App() {
     });
 
     try {
-      const plan = await buildWritePlan(scanResult.folder.path, answers);
+      const plan = await buildWritePlan(scanResult.folder.path, answersForPlan);
       setSafeWrite({
         status: "planned",
         plan,
@@ -729,6 +842,7 @@ export default function App() {
         generateResult: null,
         error: null,
       });
+      revealSafeWrite();
     } catch (error) {
       setSafeWrite({
         status: "error",
@@ -738,6 +852,7 @@ export default function App() {
         generateResult: null,
         error: error instanceof Error ? error.message : "쓰기 계획을 만들지 못했습니다.",
       });
+      revealSafeWrite();
     }
   }
 
@@ -858,6 +973,8 @@ export default function App() {
             appleConnection={appleConnection}
             appleCredentialDraft={appleCredentialDraft}
             appleFocusToken={appleFocusToken}
+            preflight={preflight}
+            scanResult={scanResult}
             onAppleCredentialChange={handleAppleCredentialChange}
             onOpenStoreStep={handleOpenStoreStep}
             onPrepareAppleSession={() => void handlePrepareAppleSession()}
@@ -865,12 +982,15 @@ export default function App() {
           <SetupWizard
             advancedMode={advancedMode}
             answers={answers}
-            canGoPrevious={steps.findIndex((step) => step.id === activeStep.id) > 0}
+            canGoPrevious={activeStepIndex > 0}
             focusRequest={focusRequest}
+            nextLabel={isFinalQuestionStep ? "Review & Confirm 열기" : "다음 설정"}
+            showSkip={!isFinalQuestionStep}
             step={activeStep}
             onAnswerChange={handleAnswerChange}
-            onGoNext={() => handleQuestionStep(1)}
+            onGoNext={handleSetupNext}
             onGoPrevious={() => handleQuestionStep(-1)}
+            onSkip={() => handleQuestionStep(1)}
           />
         </section>
 
