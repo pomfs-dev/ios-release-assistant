@@ -18,17 +18,29 @@ import type {
 const BRIDGE_TIMEOUT_MS = 18_000;
 const GENERATE_TIMEOUT_MS = 180_000;
 const SCAN_TIMEOUT_MS = 35_000;
+const RETRYABLE_APPROVAL_REASONS = new Set([
+  "expired-approval",
+  "invalid-approval",
+  "used-approval",
+]);
 
 let pairingToken: string | null = null;
+let pairingPromise: Promise<string> | null = null;
 
 export class BridgeRequestError extends Error {
   canceled: boolean;
+  reason?: string;
   status: number;
 
-  constructor(message: string, { canceled = false, status = 0 } = {}) {
+  constructor(message: string, { canceled = false, reason, status = 0 }: {
+    canceled?: boolean;
+    reason?: string;
+    status?: number;
+  } = {}) {
     super(message);
     this.name = "BridgeRequestError";
     this.canceled = canceled;
+    this.reason = reason;
     this.status = status;
   }
 }
@@ -39,6 +51,7 @@ async function readPayload(response: Response) {
   if (!response.ok || !payload.ok) {
     throw new BridgeRequestError(payload.error ?? "local bridge 요청이 실패했습니다.", {
       canceled: Boolean(payload.canceled),
+      reason: typeof payload.reason === "string" ? payload.reason : undefined,
       status: response.status,
     });
   }
@@ -71,9 +84,7 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, tim
   }
 }
 
-async function pairBridge() {
-  if (pairingToken) return pairingToken;
-
+async function requestPairingToken() {
   const challengeResponse = await fetch("/api/bridge/pairing/challenge", { method: "POST" });
   const challenge = await readPayload(challengeResponse);
   const confirmResponse = await fetch("/api/bridge/pairing/confirm", {
@@ -87,8 +98,23 @@ async function pairBridge() {
     }),
   });
   const confirmation = await readPayload(confirmResponse);
-  pairingToken = confirmation.pairingToken;
-  return pairingToken;
+  const confirmedPairingToken =
+    typeof confirmation.pairingToken === "string" ? confirmation.pairingToken : "";
+  if (!confirmedPairingToken) {
+    throw new BridgeRequestError("bridge pairing token 응답이 올바르지 않습니다.", { status: 502 });
+  }
+
+  pairingToken = confirmedPairingToken;
+  return confirmedPairingToken;
+}
+
+async function pairBridge() {
+  if (pairingToken) return pairingToken;
+
+  pairingPromise ??= requestPairingToken().finally(() => {
+    pairingPromise = null;
+  });
+  return pairingPromise;
 }
 
 async function bridgePost<TPayload>(
@@ -98,12 +124,18 @@ async function bridgePost<TPayload>(
   timeoutMs = BRIDGE_TIMEOUT_MS,
 ): Promise<TPayload> {
   const token = await pairBridge();
+  const approvalToken = typeof body.approvalToken === "string" ? body.approvalToken.trim() : "";
+  const headers: Record<string, string> = {
+    authorization: `Bearer ${token}`,
+    "content-type": "application/json",
+  };
+  if (approvalToken) {
+    headers["x-ios-release-assistant-approval-token"] = approvalToken;
+  }
+
   const response = await fetchWithTimeout(path, {
     method: "POST",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json",
-    },
+    headers,
     body: JSON.stringify(body),
   }, timeoutMs);
 
@@ -116,6 +148,7 @@ async function bridgePost<TPayload>(
       error.status === 401
     ) {
       pairingToken = null;
+      pairingPromise = null;
       return bridgePost<TPayload>(path, body, false, timeoutMs);
     }
 
@@ -129,6 +162,32 @@ async function createApproval(action: string, planId?: string) {
     ...(planId ? { planId } : {}),
   });
   return approval.approvalToken;
+}
+
+function isRetryableApprovalError(error: unknown) {
+  return (
+    error instanceof BridgeRequestError &&
+    error.status === 403 &&
+    typeof error.reason === "string" &&
+    RETRYABLE_APPROVAL_REASONS.has(error.reason)
+  );
+}
+
+async function withApproval<TPayload>(
+  action: string,
+  runApprovedRequest: (approvalToken: string) => Promise<TPayload>,
+  planId?: string,
+) {
+  const approvalToken = await createApproval(action, planId);
+
+  try {
+    return await runApprovedRequest(approvalToken);
+  } catch (error) {
+    if (!isRetryableApprovalError(error)) throw error;
+
+    const freshApprovalToken = await createApproval(action, planId);
+    return runApprovedRequest(freshApprovalToken);
+  }
 }
 
 export function buildWritePlan(path: string, answers: UserAnswerState) {
@@ -156,39 +215,56 @@ export function browseServerPath(path?: string) {
 }
 
 export async function backupWritePlan(plan: WritePlan) {
-  const approvalToken = await createApproval("backup", plan.id);
-  return bridgePost<BackupResult>("/api/bridge/backup", {
-    planId: plan.id,
-    approvalToken,
-  });
+  return withApproval(
+    "backup",
+    (approvalToken) =>
+      bridgePost<BackupResult>("/api/bridge/backup", {
+        planId: plan.id,
+        approvalToken,
+      }),
+    plan.id,
+  );
 }
 
 export async function applyWritePlan(plan: WritePlan) {
-  const approvalToken = await createApproval("apply-write-plan", plan.id);
-  return bridgePost<ApplyWritePlanResult>("/api/bridge/apply-write-plan", {
-    planId: plan.id,
-    approvalToken,
-  });
+  return withApproval(
+    "apply-write-plan",
+    (approvalToken) =>
+      bridgePost<ApplyWritePlanResult>("/api/bridge/apply-write-plan", {
+        planId: plan.id,
+        approvalToken,
+      }),
+    plan.id,
+  );
 }
 
 export async function generateProject(plan: WritePlan) {
-  const approvalToken = await createApproval("generate", plan.id);
-  return bridgePost<GenerateProjectResult>("/api/bridge/generate", {
-    planId: plan.id,
-    approvalToken,
-  }, false, GENERATE_TIMEOUT_MS);
+  return withApproval(
+    "generate",
+    (approvalToken) =>
+      bridgePost<GenerateProjectResult>(
+        "/api/bridge/generate",
+        {
+          planId: plan.id,
+          approvalToken,
+        },
+        false,
+        GENERATE_TIMEOUT_MS,
+      ),
+    plan.id,
+  );
 }
 
 export async function connectAppStoreConnect(draft: AppleCredentialDraft) {
-  const approvalToken = await createApproval("asc-connect");
-  return bridgePost<AppStoreConnectConnectionResult>("/api/bridge/asc/connect", {
-    issuerId: draft.issuerId,
-    keyId: draft.keyId,
-    appAppleId: draft.appAppleId,
-    bundleId: draft.bundleId,
-    privateKeyInput: draft.privateKeyInput,
-    approvalToken,
-  });
+  return withApproval("asc-connect", (approvalToken) =>
+    bridgePost<AppStoreConnectConnectionResult>("/api/bridge/asc/connect", {
+      issuerId: draft.issuerId,
+      keyId: draft.keyId,
+      appAppleId: draft.appAppleId,
+      bundleId: draft.bundleId,
+      privateKeyInput: draft.privateKeyInput,
+      approvalToken,
+    }));
 }
 
 export function readAppStoreConnect() {
@@ -200,9 +276,13 @@ export function buildAppStoreConnectUpdatePlan(answers: UserAnswerState) {
 }
 
 export async function updateAppStoreConnectDraft(plan: AppStoreConnectUpdatePlan) {
-  const approvalToken = await createApproval("asc-update-draft", plan.id);
-  return bridgePost<AppStoreConnectUpdateResult>("/api/bridge/asc/update-draft", {
-    planId: plan.id,
-    approvalToken,
-  });
+  return withApproval(
+    "asc-update-draft",
+    (approvalToken) =>
+      bridgePost<AppStoreConnectUpdateResult>("/api/bridge/asc/update-draft", {
+        planId: plan.id,
+        approvalToken,
+      }),
+    plan.id,
+  );
 }
