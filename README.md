@@ -52,6 +52,42 @@ Install XcodeGen if needed:
 brew install xcodegen
 ```
 
+## Prepare Before You Start
+
+You can move through the Assistant much faster if you prepare these values before opening it.
+
+### 1. App Store Connect connection
+
+Prepare the App Store Connect API key information used to verify the real app session:
+
+- Issuer ID
+- Key ID
+- `.p8` private key text
+- App Apple ID, the numeric app ID shown in App Store Connect
+- Bundle ID, for example `com.example.myapp`
+
+You normally need either the App Apple ID or the Bundle ID to find the app, but keeping both ready avoids confusion. The `.p8` key can only be downloaded from App Store Connect when the key is created, so store it securely outside the repository.
+
+Do not prepare or enter an Apple ID password. This tool uses App Store Connect API keys, not Apple ID login credentials.
+
+### 2. App Review information
+
+Prepare the information reviewers will need before you submit the app:
+
+- Privacy Policy URL: a public `https://` page that opens without login.
+- App Store description: a clear explanation of what the app does and who it is for.
+- Demo account, if the app requires login: email/username, password, and any short notes reviewers need to reach the main screens.
+
+For login-required apps, make sure the demo account is already created in your production or review environment, does not require two-factor authentication, and remains available during the full review period.
+
+Useful optional items:
+
+- Support URL
+- Marketing URL
+- Contact email or phone number for App Review
+- App Store screenshots prepared in Apple's required sizes
+- Short "What's New" text for updates
+
 ## Quick Start
 
 ```bash
@@ -218,6 +254,42 @@ XcodeGen 설치:
 ```bash
 brew install xcodegen
 ```
+
+## 시작 전에 준비할 것
+
+Assistant를 열기 전에 아래 값을 미리 준비해두면 훨씬 빠르게 진행할 수 있습니다.
+
+### 1. App Store Connect 연결 정보
+
+실제 App Store Connect 앱 세션을 확인하기 위해 사용할 API Key 정보를 준비합니다.
+
+- Issuer ID
+- Key ID
+- `.p8` private key 본문
+- App Apple ID: App Store Connect에 표시되는 숫자 앱 ID
+- Bundle ID: 예를 들어 `com.example.myapp`
+
+앱을 찾을 때는 보통 App Apple ID 또는 Bundle ID 중 하나만 있어도 되지만, 둘 다 준비해두면 혼동이 줄어듭니다. `.p8` key는 App Store Connect에서 key를 만들 때 한 번만 다운로드할 수 있으므로 저장소 밖의 안전한 위치에 보관하세요.
+
+Apple ID 비밀번호는 준비하거나 입력하지 마세요. 이 도구는 Apple ID 로그인이 아니라 App Store Connect API Key를 사용합니다.
+
+### 2. 앱 심사 정보
+
+심사 제출 전에 심사자가 필요로 하는 정보를 준비합니다.
+
+- 개인정보처리방침 URL: 로그인 없이 열리는 공개 `https://` 페이지
+- App Store에 보일 앱 설명: 앱이 무엇을 하는지, 누구를 위한 앱인지 알 수 있는 설명
+- 로그인 기능이 있는 경우 심사용 데모 계정: 이메일/아이디, 비밀번호, 주요 화면에 도달하기 위한 짧은 안내
+
+로그인이 필요한 앱이라면 데모 계정을 production 또는 review 환경에 미리 만들어두고, 2단계 인증 없이 로그인 가능하며, 심사가 끝날 때까지 유지되도록 해야 합니다.
+
+준비하면 좋은 선택 항목:
+
+- 지원 URL
+- 마케팅 URL
+- App Review 연락처 이메일 또는 전화번호
+- Apple 요구 규격에 맞춘 App Store 스크린샷
+- 업데이트인 경우 "What's New" 문구
 
 ## 빠른 시작
 
