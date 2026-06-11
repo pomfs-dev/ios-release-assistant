@@ -11,8 +11,29 @@ export const BRIDGE_ENDPOINTS = [
   {
     method: "POST",
     path: "/api/bridge/pair",
+    status: "deprecated",
+    access: "deprecated",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/pairing/challenge",
     status: "implemented",
     access: "pairing",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/pairing/confirm",
+    status: "implemented",
+    access: "pairing",
+    mutation: false,
+  },
+  {
+    method: "POST",
+    path: "/api/bridge/approvals",
+    status: "implemented",
+    access: "paired-approval",
     mutation: false,
   },
   {
@@ -119,7 +140,7 @@ export function getBridgeCapabilities({ paired = false } = {}) {
     security: {
       pairingRequiredForProjectData: true,
       mutationRequiresPlanId: true,
-      mutationRequiresConfirmationToken: true,
+      mutationRequiresOneTimeApproval: true,
       wildcardCorsForMutations: false,
       redaction: true,
     },

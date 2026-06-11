@@ -6,11 +6,11 @@ import {
   buildWritePlan,
   connectAppStoreConnect,
   generateProject,
+  scanFolder,
   selectFolder,
   selectProjectSpec,
   selectScreenshot,
 } from "./api/bridge";
-import { scanFolder } from "./api/scanFolder";
 import { actionViews } from "./data/actionViews";
 import { getAppScanSummary } from "./data/appScanSummary";
 import { deriveChangeReviewSummary } from "./data/changeReviewSummary";

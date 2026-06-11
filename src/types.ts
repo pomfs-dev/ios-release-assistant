@@ -139,9 +139,6 @@ export type AppStoreConnectUpdatePlan = {
   operations: AppStoreConnectUpdateOperation[];
   operationCount: number;
   manualItems: AppStoreConnectManualItem[];
-  confirmation: {
-    update: string;
-  };
 };
 
 export type AppStoreConnectUpdateResult = {
@@ -412,11 +409,6 @@ export type WritePlan = {
   operations: WritePlanOperation[];
   operationCount: number;
   requiresBackup: boolean;
-  confirmation: {
-    backup: string;
-    apply: string;
-    generate: string;
-  };
 };
 
 export type BackupManifest = {

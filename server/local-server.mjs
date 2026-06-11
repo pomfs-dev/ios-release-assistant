@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { pathToFileURL } from "node:url";
 import { createServer as createViteServer } from "vite";
 import { getBridgeCapabilities } from "./bridge/capabilities.mjs";
+import { createApprovalManager, getApprovalTokenFromRequest } from "./bridge/approvals.mjs";
 import { createPairingManager, getPairingTokenFromRequest } from "./bridge/pairing.mjs";
 import {
   createAllowedOriginAllowlist,
@@ -76,19 +77,38 @@ function sendBridgeNotImplemented(response, policy, headers) {
   );
 }
 
-function validateRequiredApproval(policy, body) {
+function requestOrigin(request) {
+  return typeof request.headers.origin === "string" ? request.headers.origin : null;
+}
+
+function validateRequiredApproval(policy, request, body, approvalManager) {
   if (policy.requiresPlanId && typeof body.planId !== "string") {
     return { ok: false, statusCode: 400, error: "plan id가 필요합니다." };
   }
 
-  if (policy.requiresConfirmationToken && typeof body.confirmationToken !== "string") {
-    return { ok: false, statusCode: 400, error: "confirmation token이 필요합니다." };
+  if (policy.requiresApproval) {
+    const validation = approvalManager.consumeApproval({
+      action: policy.approvalAction,
+      origin: requestOrigin(request),
+      planId: body.planId,
+      token: getApprovalTokenFromRequest(request, body),
+    });
+
+    if (!validation.ok) {
+      return {
+        ok: false,
+        statusCode: 403,
+        error: "one-time approval이 필요합니다.",
+        reason: validation.reason,
+      };
+    }
   }
 
   return { ok: true };
 }
 
 function createBridgeHandler({
+  approvalManager,
   allowedOrigins,
   appStoreConnect,
   filePicker,
@@ -141,7 +161,58 @@ function createBridgeHandler({
     }
 
     if (url.pathname === "/api/bridge/pair" && request.method === "POST") {
-      const pairing = pairingManager.rotatePairingToken();
+      sendJson(
+        response,
+        410,
+        {
+          ok: false,
+          error: "이 pairing endpoint는 폐기되었습니다. /api/bridge/pairing/challenge를 사용하세요.",
+        },
+        { headers: cors.headers },
+      );
+      return true;
+    }
+
+    const body = await readJsonBody(request);
+
+    if (url.pathname === "/api/bridge/pairing/challenge" && request.method === "POST") {
+      const pairingChallenge = pairingManager.createPairingChallenge({
+        origin: requestOrigin(request),
+      });
+      sendJson(
+        response,
+        200,
+        {
+          ok: true,
+          ...pairingChallenge,
+          bridge: getBridgeCapabilities({ paired: false }),
+        },
+        { headers: cors.headers, redact: false },
+      );
+      return true;
+    }
+
+    if (url.pathname === "/api/bridge/pairing/confirm" && request.method === "POST") {
+      const pairing = pairingManager.confirmPairingChallenge({
+        challengeId: body.challengeId,
+        origin: requestOrigin(request),
+        pairingCode: body.pairingCode,
+      });
+
+      if (!pairing.ok) {
+        sendJson(
+          response,
+          403,
+          {
+            ok: false,
+            error: "pairing challenge를 확인하지 못했습니다.",
+            reason: pairing.reason,
+          },
+          { headers: cors.headers },
+        );
+        return true;
+      }
+
       sendJson(
         response,
         200,
@@ -156,11 +227,10 @@ function createBridgeHandler({
       return true;
     }
 
-    const body = await readJsonBody(request);
-
     if (policy.requiresPairing) {
       const validation = pairingManager.validatePairingToken(
         getPairingTokenFromRequest(request, body),
+        { origin: requestOrigin(request) },
       );
 
       if (!validation.ok) {
@@ -178,7 +248,32 @@ function createBridgeHandler({
       }
     }
 
-    const approval = validateRequiredApproval(policy, body);
+    if (url.pathname === "/api/bridge/approvals" && request.method === "POST") {
+      const approval = approvalManager.createApproval({
+        action: body.action,
+        origin: requestOrigin(request),
+        planId: body.planId,
+      });
+
+      if (!approval.ok) {
+        sendJson(
+          response,
+          400,
+          {
+            ok: false,
+            error: "approval action이 필요합니다.",
+            reason: approval.reason,
+          },
+          { headers: cors.headers },
+        );
+        return true;
+      }
+
+      sendJson(response, 200, approval, { headers: cors.headers, redact: false });
+      return true;
+    }
+
+    const approval = validateRequiredApproval(policy, request, body, approvalManager);
     if (!approval.ok) {
       sendJson(
         response,
@@ -186,6 +281,7 @@ function createBridgeHandler({
         {
           ok: false,
           error: approval.error,
+          reason: approval.reason,
         },
         { headers: cors.headers },
       );
@@ -305,7 +401,7 @@ function createBridgeHandler({
 
     if (url.pathname === "/api/bridge/backup" && request.method === "POST") {
       try {
-        const result = await writePlanManager.backup(body.planId, body.confirmationToken);
+        const result = await writePlanManager.backup(body.planId);
         sendJson(response, 200, result, { headers: cors.headers });
       } catch (error) {
         sendJson(
@@ -323,7 +419,7 @@ function createBridgeHandler({
 
     if (url.pathname === "/api/bridge/apply-write-plan" && request.method === "POST") {
       try {
-        const result = await writePlanManager.apply(body.planId, body.confirmationToken);
+        const result = await writePlanManager.apply(body.planId);
         sendJson(response, result.ok ? 200 : 409, result, { headers: cors.headers });
       } catch (error) {
         sendJson(
@@ -350,7 +446,7 @@ function createBridgeHandler({
           return true;
         }
 
-        const result = await generateXcodeProject(plan, body.confirmationToken);
+        const result = await generateXcodeProject(plan);
         sendJson(response, 200, result, { headers: cors.headers });
       } catch (error) {
         sendJson(
@@ -368,7 +464,7 @@ function createBridgeHandler({
 
     if (url.pathname === "/api/bridge/asc/connect" && request.method === "POST") {
       try {
-        const result = await appStoreConnect.connect(body, body.confirmationToken);
+        const result = await appStoreConnect.connect(body);
         sendJson(response, 200, result, { headers: cors.headers });
       } catch (error) {
         sendJson(
@@ -425,7 +521,7 @@ function createBridgeHandler({
 
     if (url.pathname === "/api/bridge/asc/update-draft" && request.method === "POST") {
       try {
-        const result = await appStoreConnect.updateDraft(body.planId, body.confirmationToken);
+        const result = await appStoreConnect.updateDraft(body.planId);
         sendJson(response, 200, result, { headers: cors.headers });
       } catch (error) {
         sendJson(
@@ -450,6 +546,7 @@ function createBridgeHandler({
 }
 
 export function createApiHandler({
+  approvalManager = createApprovalManager(),
   allowedOrigins = createAllowedOriginAllowlist(DEFAULT_PORT),
   appStoreConnect = createAppStoreConnectManager(),
   filePicker = createFilePicker(),
@@ -458,6 +555,7 @@ export function createApiHandler({
   writePlanManager = createWritePlanManager(),
 } = {}) {
   const handleBridgeApi = createBridgeHandler({
+    approvalManager,
     allowedOrigins,
     appStoreConnect,
     filePicker,
@@ -509,16 +607,15 @@ export function createApiHandler({
         return true;
       }
 
-      try {
-        const body = await readJsonBody(request);
-        const result = await scanFolder(body.path);
-        sendJson(response, 200, result, { headers: cors.headers });
-      } catch (error) {
-        sendJson(response, error.statusCode ?? 500, {
+      sendJson(
+        response,
+        410,
+        {
           ok: false,
-          error: error instanceof Error ? error.message : "앱 폴더를 읽지 못했습니다.",
-        }, { headers: cors.headers });
-      }
+          error: "legacy scan endpoint는 폐기되었습니다. paired bridge scan을 사용하세요.",
+        },
+        { headers: cors.headers },
+      );
       return true;
     }
 

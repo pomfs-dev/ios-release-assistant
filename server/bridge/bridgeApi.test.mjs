@@ -65,6 +65,47 @@ async function copyFixtureApp() {
   return appPath;
 }
 
+async function pairBridge(baseUrl, headers = {}) {
+  const challengeResponse = await fetch(`${baseUrl}/api/bridge/pairing/challenge`, {
+    method: "POST",
+    headers,
+  });
+  const challenge = await readJson(challengeResponse);
+  expect(challengeResponse.status).toBe(200);
+  expect(challenge.pairingToken).toBeUndefined();
+
+  const confirmResponse = await fetch(`${baseUrl}/api/bridge/pairing/confirm`, {
+    method: "POST",
+    headers: {
+      ...headers,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      challengeId: challenge.challengeId,
+      pairingCode: challenge.pairingCode,
+    }),
+  });
+  const pairing = await readJson(confirmResponse);
+  expect(confirmResponse.status).toBe(200);
+  expect(pairing.pairingToken).toEqual(expect.any(String));
+  return pairing;
+}
+
+async function createApproval(baseUrl, headers, action, planId) {
+  const response = await fetch(`${baseUrl}/api/bridge/approvals`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      action,
+      ...(planId ? { planId } : {}),
+    }),
+  });
+  const approval = await readJson(response);
+  expect(response.status).toBe(200);
+  expect(approval.approvalToken).toEqual(expect.any(String));
+  return approval;
+}
+
 describe("bridge API foundation", () => {
   it("serves bridge health without a pairing token", async () => {
     const baseUrl = await createTestServer();
@@ -81,20 +122,34 @@ describe("bridge API foundation", () => {
     });
   });
 
-  it("returns only pairing metadata from the pair endpoint", async () => {
+  it("returns only pairing metadata from the challenge endpoint", async () => {
     const baseUrl = await createTestServer();
-    const response = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
+    const response = await fetch(`${baseUrl}/api/bridge/pairing/challenge`, { method: "POST" });
     const payload = await readJson(response);
 
     expect(response.status).toBe(200);
     expect(payload.ok).toBe(true);
-    expect(payload.pairingToken).toEqual(expect.any(String));
+    expect(payload.challengeId).toEqual(expect.any(String));
+    expect(payload.pairingCode).toEqual(expect.any(String));
+    expect(payload.pairingToken).toBeUndefined();
     expect(JSON.stringify(payload)).not.toContain("project.yml");
   });
 
-  it("allows loopback browser proxy origins without wildcard CORS", async () => {
+  it("does not issue tokens from the deprecated pair endpoint", async () => {
     const baseUrl = await createTestServer();
     const response = await fetch(`${baseUrl}/api/bridge/pair`, {
+      method: "POST",
+    });
+    const payload = await readJson(response);
+
+    expect(response.status).toBe(410);
+    expect(payload.ok).toBe(false);
+    expect(payload.pairingToken).toBeUndefined();
+  });
+
+  it("rejects loopback browser proxy origins outside the explicit allowlist", async () => {
+    const baseUrl = await createTestServer();
+    const response = await fetch(`${baseUrl}/api/bridge/pairing/challenge`, {
       method: "POST",
       headers: {
         origin: "http://localhost:51095",
@@ -102,10 +157,33 @@ describe("bridge API foundation", () => {
     });
     const payload = await readJson(response);
 
-    expect(response.status).toBe(200);
-    expect(payload.ok).toBe(true);
-    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:51095");
+    expect(response.status).toBe(403);
+    expect(payload.ok).toBe(false);
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
     expect(response.headers.get("access-control-allow-origin")).not.toBe("*");
+  });
+
+  it("pins pairing tokens to their confirmed origin", async () => {
+    const allowedOrigin = "http://127.0.0.1:56604";
+    const baseUrl = await createTestServer();
+    const pairing = await pairBridge(baseUrl, { origin: allowedOrigin });
+
+    const response = await fetch(`${baseUrl}/api/bridge/scan-folder`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${pairing.pairingToken}`,
+        "content-type": "application/json",
+        origin: "http://localhost:56604",
+      },
+      body: JSON.stringify({ path: fixturePath }),
+    });
+    const payload = await readJson(response);
+
+    expect(response.status).toBe(403);
+    expect(payload).toMatchObject({
+      ok: false,
+      error: "허용되지 않은 origin입니다.",
+    });
   });
 
   it("rejects bridge scan requests without a pairing token", async () => {
@@ -122,6 +200,21 @@ describe("bridge API foundation", () => {
       ok: false,
       reason: "missing-pairing",
     });
+  });
+
+  it("retire legacy scan endpoint without returning project data", async () => {
+    const baseUrl = await createTestServer();
+    const response = await fetch(`${baseUrl}/api/scan-folder`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ path: fixturePath }),
+    });
+    const payload = await readJson(response);
+
+    expect(response.status).toBe(410);
+    expect(payload.ok).toBe(false);
+    expect(JSON.stringify(payload)).not.toContain("FixtureApp");
+    expect(JSON.stringify(payload)).not.toContain("project.yml");
   });
 
   it("rejects local picker requests without a pairing token", async () => {
@@ -144,8 +237,7 @@ describe("bridge API foundation", () => {
     const baseUrl = await createTestServer({
       folderBrowser: createFolderBrowser({ roots: [path.dirname(fixturePath)] }),
     });
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
     const headers = {
       authorization: `Bearer ${pairing.pairingToken}`,
       "content-type": "application/json",
@@ -218,8 +310,7 @@ describe("bridge API foundation", () => {
         }),
       },
     });
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
     const headers = {
       authorization: `Bearer ${pairing.pairingToken}`,
       "content-type": "application/json",
@@ -274,8 +365,7 @@ describe("bridge API foundation", () => {
         selectProjectSpec: async () => ({ ok: true, path: "unused", kind: "project-spec" }),
       },
     });
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
 
     const response = await fetch(`${baseUrl}/api/bridge/select-folder`, {
       method: "POST",
@@ -298,8 +388,7 @@ describe("bridge API foundation", () => {
 
   it("scans a local fixture folder after pairing", async () => {
     const baseUrl = await createTestServer();
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
 
     const scanResponse = await fetch(`${baseUrl}/api/bridge/scan-folder`, {
       method: "POST",
@@ -340,8 +429,7 @@ describe("bridge API foundation", () => {
 
   it("accepts a direct XcodeGen project file path after pairing", async () => {
     const baseUrl = await createTestServer();
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
 
     const scanResponse = await fetch(`${baseUrl}/api/bridge/scan-folder`, {
       method: "POST",
@@ -393,8 +481,7 @@ describe("bridge API foundation", () => {
   it("builds a write plan, creates a backup, applies structured writes, and rescans", async () => {
     const appPath = await copyFixtureApp();
     const baseUrl = await createTestServer();
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
     const headers = {
       authorization: `Bearer ${pairing.pairingToken}`,
       "content-type": "application/json",
@@ -437,14 +524,18 @@ describe("bridge API foundation", () => {
       headers,
       body: JSON.stringify({ planId: plan.id }),
     });
-    expect(rejectedBackupResponse.status).toBe(400);
+    const rejectedBackup = await readJson(rejectedBackupResponse);
+    expect(rejectedBackupResponse.status).toBe(403);
+    expect(rejectedBackup.reason).toBe("missing-approval");
+
+    const backupApproval = await createApproval(baseUrl, headers, "backup", plan.id);
 
     const backupResponse = await fetch(`${baseUrl}/api/bridge/backup`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         planId: plan.id,
-        confirmationToken: plan.confirmation.backup,
+        approvalToken: backupApproval.approvalToken,
       }),
     });
     const backup = await readJson(backupResponse);
@@ -453,12 +544,25 @@ describe("bridge API foundation", () => {
     expect(backup.manifest.files).toHaveLength(3);
     expect(backup.manifest.writePlanId).toBe(plan.id);
 
+    const replayedBackupResponse = await fetch(`${baseUrl}/api/bridge/backup`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        planId: plan.id,
+        approvalToken: backupApproval.approvalToken,
+      }),
+    });
+    const replayedBackup = await readJson(replayedBackupResponse);
+    expect(replayedBackupResponse.status).toBe(403);
+    expect(replayedBackup.reason).toBe("invalid-approval");
+
+    const applyApproval = await createApproval(baseUrl, headers, "apply-write-plan", plan.id);
     const applyResponse = await fetch(`${baseUrl}/api/bridge/apply-write-plan`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         planId: plan.id,
-        confirmationToken: plan.confirmation.apply,
+        approvalToken: applyApproval.approvalToken,
       }),
     });
     const applied = await readJson(applyResponse);
@@ -495,8 +599,7 @@ describe("bridge API foundation", () => {
     process.env.XCODEGEN_BIN = fakeXcodegen;
 
     const baseUrl = await createTestServer();
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
     const headers = {
       authorization: `Bearer ${pairing.pairingToken}`,
       "content-type": "application/json",
@@ -515,14 +618,28 @@ describe("bridge API foundation", () => {
       headers,
       body: JSON.stringify({ planId: plan.id }),
     });
-    expect(rejectedGenerateResponse.status).toBe(400);
+    const rejectedGenerate = await readJson(rejectedGenerateResponse);
+    expect(rejectedGenerateResponse.status).toBe(403);
+    expect(rejectedGenerate.reason).toBe("missing-approval");
+
+    const mismatchedApproval = await createApproval(baseUrl, headers, "backup", plan.id);
+    const mismatchedGenerateResponse = await fetch(`${baseUrl}/api/bridge/generate`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ planId: plan.id, approvalToken: mismatchedApproval.approvalToken }),
+    });
+    const mismatchedGenerate = await readJson(mismatchedGenerateResponse);
+    expect(mismatchedGenerateResponse.status).toBe(403);
+    expect(mismatchedGenerate.reason).toBe("action-mismatch");
+
+    const generateApproval = await createApproval(baseUrl, headers, "generate", plan.id);
 
     const generateResponse = await fetch(`${baseUrl}/api/bridge/generate`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         planId: plan.id,
-        confirmationToken: plan.confirmation.generate,
+        approvalToken: generateApproval.approvalToken,
       }),
     });
     const generated = await readJson(generateResponse);
@@ -573,8 +690,7 @@ describe("bridge API foundation", () => {
       },
     });
     const baseUrl = await createTestServer({ appStoreConnect });
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
     const headers = {
       authorization: `Bearer ${pairing.pairingToken}`,
       "content-type": "application/json",
@@ -590,7 +706,11 @@ describe("bridge API foundation", () => {
         privateKeyInput,
       }),
     });
-    expect(rejectedConnect.status).toBe(400);
+    const rejectedConnectPayload = await readJson(rejectedConnect);
+    expect(rejectedConnect.status).toBe(403);
+    expect(rejectedConnectPayload.reason).toBe("missing-approval");
+
+    const connectApproval = await createApproval(baseUrl, headers, "asc-connect");
 
     const connectResponse = await fetch(`${baseUrl}/api/bridge/asc/connect`, {
       method: "POST",
@@ -600,7 +720,7 @@ describe("bridge API foundation", () => {
         keyId: "KEY1234567",
         bundleId: "com.example.fixture",
         privateKeyInput,
-        confirmationToken: "CONFIRM_ASC_CONNECT",
+        approvalToken: connectApproval.approvalToken,
       }),
     });
     const connected = await readJson(connectResponse);
@@ -783,13 +903,13 @@ describe("bridge API foundation", () => {
       },
     });
     const baseUrl = await createTestServer({ appStoreConnect });
-    const pairResponse = await fetch(`${baseUrl}/api/bridge/pair`, { method: "POST" });
-    const pairing = await readJson(pairResponse);
+    const pairing = await pairBridge(baseUrl);
     const headers = {
       authorization: `Bearer ${pairing.pairingToken}`,
       "content-type": "application/json",
     };
 
+    const connectApproval = await createApproval(baseUrl, headers, "asc-connect");
     const connectResponse = await fetch(`${baseUrl}/api/bridge/asc/connect`, {
       method: "POST",
       headers,
@@ -798,7 +918,7 @@ describe("bridge API foundation", () => {
         keyId: "KEY1234567",
         bundleId: "com.example.fixture",
         privateKeyInput,
-        confirmationToken: "CONFIRM_ASC_CONNECT",
+        approvalToken: connectApproval.approvalToken,
       }),
     });
     expect(connectResponse.status).toBe(200);
@@ -849,14 +969,18 @@ describe("bridge API foundation", () => {
       headers,
       body: JSON.stringify({ planId: plan.id }),
     });
-    expect(rejectedUpdate.status).toBe(400);
+    const rejectedUpdatePayload = await readJson(rejectedUpdate);
+    expect(rejectedUpdate.status).toBe(403);
+    expect(rejectedUpdatePayload.reason).toBe("missing-approval");
+
+    const updateApproval = await createApproval(baseUrl, headers, "asc-update-draft", plan.id);
 
     const updateResponse = await fetch(`${baseUrl}/api/bridge/asc/update-draft`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         planId: plan.id,
-        confirmationToken: plan.confirmation.update,
+        approvalToken: updateApproval.approvalToken,
       }),
     });
     const updated = await readJson(updateResponse);

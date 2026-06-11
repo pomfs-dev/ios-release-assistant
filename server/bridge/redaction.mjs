@@ -3,7 +3,7 @@ const SECRET_KEY_PATTERN =
 const PEM_PRIVATE_KEY_PATTERN =
   /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g;
 const SAFE_SECURITY_METADATA_KEYS = new Set([
-  "mutationRequiresConfirmationToken",
+  "mutationRequiresOneTimeApproval",
   "secretStorage",
 ]);
 
