@@ -168,28 +168,6 @@ App Store Connect 단계에서는 실제 앱이 있는지 확인하고 제한적
 - 필요한 최소 권한의 App Store Connect API Key를 사용하세요.
 - private key 입력값은 현재 로컬 세션에서만 사용해야 하며 프로젝트에 저장하면 안 됩니다.
 
-## Git에 올리면 안 되는 것
-
-이 저장소는 다음 항목을 ignore합니다.
-
-- `.env`, `.env.local` 같은 로컬 환경 파일
-- `.p8`, `.pem`, `.key`
-- provisioning profile
-- `.ipa`, `.xcarchive`, dSYM 파일
-- `node_modules/`, `dist/`
-- `.release-assistant-backups/`
-- `CODEX_REPORTS/`, `HOF/`, `INJECT/`
-- `xcuserdata/`, `*.xcuserstate` 같은 Xcode 사용자 상태
-
-변경사항을 공개하기 전에 확인하세요.
-
-```bash
-git status --short --ignored
-git ls-files | rg -i '(\.env|\.p8|\.pem|private|secret|token|mobileprovision|xcuserdata|xcarchive|ipa)'
-```
-
-두 번째 명령에는 `.env.example`과 의도한 테스트 fixture만 나와야 합니다.
-
 ## 개발
 
 ```bash
@@ -198,6 +176,8 @@ npm run dev
 npm test
 npm run build
 ```
+
+기여 전 점검과 커밋 위생 안내는 [CONTRIBUTING.md](CONTRIBUTING.md)를 참고하세요.
 
 ## 라이선스
 
@@ -374,28 +354,6 @@ Security rules:
 - Use the minimum App Store Connect API key permissions needed for the task.
 - Private key input is used for the current local session and should not be saved in your project.
 
-## What Should Not Be Committed
-
-The repository ignores common local and sensitive artifacts:
-
-- `.env`, `.env.local`, and other local env files
-- `.p8`, `.pem`, `.key`
-- provisioning profiles
-- `.ipa`, `.xcarchive`, dSYM files
-- `node_modules/`, `dist/`
-- `.release-assistant-backups/`
-- `CODEX_REPORTS/`, `HOF/`, `INJECT/`
-- Xcode user state such as `xcuserdata/` and `*.xcuserstate`
-
-Before publishing changes, run:
-
-```bash
-git status --short --ignored
-git ls-files | rg -i '(\.env|\.p8|\.pem|private|secret|token|mobileprovision|xcuserdata|xcarchive|ipa)'
-```
-
-Only `.env.example` and intentional test fixtures should appear in the second command.
-
 ## Development
 
 ```bash
@@ -404,6 +362,8 @@ npm run dev
 npm test
 npm run build
 ```
+
+For contribution checks and commit hygiene, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
