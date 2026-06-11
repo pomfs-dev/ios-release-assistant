@@ -973,6 +973,8 @@ export default function App() {
             appleConnection={appleConnection}
             appleCredentialDraft={appleCredentialDraft}
             appleFocusToken={appleFocusToken}
+            preflight={preflight}
+            scanResult={scanResult}
             onAppleCredentialChange={handleAppleCredentialChange}
             onOpenStoreStep={handleOpenStoreStep}
             onPrepareAppleSession={() => void handlePrepareAppleSession()}
