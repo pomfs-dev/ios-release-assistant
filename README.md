@@ -179,6 +179,14 @@ npm run build
 
 기여 전 점검과 커밋 위생 안내는 [CONTRIBUTING.md](CONTRIBUTING.md)를 참고하세요.
 
+## 만든 사람
+
+iOS Release Assistant는 **P.O.MFS Dev Team의 David Kwon**이 만들었습니다.
+
+P.O.MFS Dev Team은 인디 음악, 공연장, 아티스트, 팬 커뮤니티를 위한 디지털 제품과 오픈소스 도구를 만드는 팀입니다.
+
+공식 홈페이지: [prideofmisfits.com](https://www.prideofmisfits.com)
+
 ## 라이선스
 
 MIT License. 자세한 내용은 [LICENSE](LICENSE)를 참고하세요.
@@ -364,6 +372,14 @@ npm run build
 ```
 
 For contribution checks and commit hygiene, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Creator
+
+iOS Release Assistant was created by **David Kwon of P.O.MFS Dev Team**.
+
+P.O.MFS Dev Team builds digital products and open-source tools for indie music, venues, artists, and fan communities.
+
+Official website: [prideofmisfits.com](https://www.prideofmisfits.com)
 
 ## License
 
