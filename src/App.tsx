@@ -17,7 +17,7 @@ import { deriveChangeReviewSummary } from "./data/changeReviewSummary";
 import { deriveReleaseSteps } from "./data/deriveReleaseSteps";
 import { applyPreflightToSteps, derivePreflightSummary } from "./data/preflightChecks";
 import { releaseSteps } from "./data/releaseSteps";
-import { updateUserAnswer } from "./data/userAnswers";
+import { confirmStepAnswers, updateUserAnswer } from "./data/userAnswers";
 import { ActionPreview } from "./components/ActionPreview";
 import { DevNotesModal } from "./components/DevNotesModal";
 import { InspectorPreview } from "./components/InspectorPreview";
@@ -603,8 +603,11 @@ export default function App() {
   }
 
   function handleSetupNext() {
+    const nextAnswers = confirmStepAnswers(answers, activeStep);
+    setAnswers(nextAnswers);
+
     if (isFinalQuestionStep) {
-      void handleBuildWritePlan();
+      void handleBuildWritePlan(nextAnswers);
       return;
     }
 
@@ -717,7 +720,7 @@ export default function App() {
     }
   }
 
-  async function handleBuildWritePlan() {
+  async function handleBuildWritePlan(answersForPlan: UserAnswerState = answers) {
     if (!scanResult) {
       setSafeWrite({
         status: "error",
@@ -743,7 +746,7 @@ export default function App() {
     });
 
     try {
-      const plan = await buildWritePlan(scanResult.folder.path, answers);
+      const plan = await buildWritePlan(scanResult.folder.path, answersForPlan);
       setSafeWrite({
         status: "planned",
         plan,
@@ -896,6 +899,7 @@ export default function App() {
             onAnswerChange={handleAnswerChange}
             onGoNext={handleSetupNext}
             onGoPrevious={() => handleQuestionStep(-1)}
+            onSkip={() => handleQuestionStep(1)}
           />
         </section>
 

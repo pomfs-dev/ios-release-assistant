@@ -17,6 +17,7 @@ type SetupWizardProps = {
   onAnswerChange: (stepId: string, key: string, value: UserAnswerValue) => void;
   onGoNext: () => void;
   onGoPrevious: () => void;
+  onSkip?: () => void;
 };
 
 type FieldRendererProps = {
@@ -132,6 +133,7 @@ export function SetupWizard({
   onAnswerChange,
   onGoNext,
   onGoPrevious,
+  onSkip,
   showSkip = true,
   step,
 }: SetupWizardProps) {
@@ -223,7 +225,7 @@ export function SetupWizard({
         </button>
         <div>
           {showSkip ? (
-            <button type="button" className="secondary" onClick={onGoNext}>
+            <button type="button" className="secondary" onClick={onSkip ?? onGoNext}>
               질문 건너뛰기
             </button>
           ) : null}
