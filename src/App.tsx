@@ -26,6 +26,7 @@ import { SidebarProgress } from "./components/SidebarProgress";
 import { StartPanel } from "./components/StartPanel";
 import { StoreConnectPanel } from "./components/StoreConnectPanel";
 import { TopBar } from "./components/TopBar";
+import { chooseText, I18nProvider, type Language } from "./i18n";
 import type {
   AppleConnectionState,
   AppleCredentialDraft,
@@ -38,6 +39,7 @@ import type {
 } from "./types";
 
 const defaultFolderPath = import.meta.env.VITE_DEFAULT_APP_PATH ?? "/Users/me/MyVibeApp";
+const languageStorageKey = "ios-release-assistant-language";
 const emptyAppleCredentialDraft: AppleCredentialDraft = {
   issuerId: "",
   keyId: "",
@@ -102,6 +104,11 @@ function withSelectedChoice(
 }
 
 export default function App() {
+  const [language, setLanguage] = useState<Language>(() => {
+    const storedLanguage =
+      typeof window !== "undefined" ? window.localStorage.getItem(languageStorageKey) : null;
+    return storedLanguage === "en" || storedLanguage === "ko" ? storedLanguage : "ko";
+  });
   const [activeStepId, setActiveStepId] = useState(releaseSteps[0].id);
   const [activeActionKey, setActiveActionKey] = useState(releaseSteps[0].actionKey);
   const [showNotes, setShowNotes] = useState(false);
@@ -342,6 +349,11 @@ export default function App() {
     scannedSummary?.appName,
     steps,
   ]);
+
+  function handleLanguageChange(nextLanguage: Language) {
+    setLanguage(nextLanguage);
+    window.localStorage.setItem(languageStorageKey, nextLanguage);
+  }
 
   async function handleScanPath(actionKey: "load-folder" | "load-settings", pathToScan = folderPath) {
     setActiveActionKey(actionKey);
@@ -740,7 +752,11 @@ export default function App() {
     if (!issuerId || !keyId || !privateKeyInput || (!appAppleId && !bundleId)) {
       setAppleConnection({
         status: "error",
-        error: "Issuer ID, Key ID, private key, 그리고 Apple App ID 또는 Bundle ID를 입력해야 합니다.",
+        error: chooseText(
+          language,
+          "Issuer ID, Key ID, private key, 그리고 Apple App ID 또는 Bundle ID를 입력해야 합니다.",
+          "Enter Issuer ID, Key ID, private key, and either Apple App ID or Bundle ID.",
+        ),
       });
       setAppleFocusToken(Date.now());
       return;
@@ -749,7 +765,11 @@ export default function App() {
     if (!privateKeyInput.includes("BEGIN PRIVATE KEY")) {
       setAppleConnection({
         status: "error",
-        error: ".p8 private key 본문은 BEGIN PRIVATE KEY 형식이어야 합니다.",
+        error: chooseText(
+          language,
+          ".p8 private key 본문은 BEGIN PRIVATE KEY 형식이어야 합니다.",
+          "The .p8 private key text must use the BEGIN PRIVATE KEY format.",
+        ),
       });
       setAppleFocusToken(Date.now());
       return;
@@ -932,11 +952,14 @@ export default function App() {
   }
 
   return (
-    <main className="app">
+    <I18nProvider language={language}>
+      <main className="app">
       <TopBar
         advancedMode={advancedMode}
         folderName={scannedSummary?.appName ?? scannedFolder?.name ?? "MyVibeApp"}
         folderPath={scannedFolder?.path ?? folderPath}
+        language={language}
+        onLanguageChange={handleLanguageChange}
         onToggleAdvanced={setAdvancedMode}
         onOpenNotes={() => setShowNotes(true)}
       />
@@ -1014,13 +1037,31 @@ export default function App() {
         <div className="generate-copy">
           <strong>
             {reviewCount > 0
-              ? `${reviewCount}개 항목만 더 확인하면 Xcode에서 열 프로젝트 파일을 만들 수 있습니다.`
-              : "기본 출시 설정을 모두 읽었습니다."}
+              ? chooseText(
+                  language,
+                  `${reviewCount}개 항목만 더 확인하면 Xcode에서 열 프로젝트 파일을 만들 수 있습니다.`,
+                  `Review ${reviewCount} more item${
+                    reviewCount === 1 ? "" : "s"
+                  } to create the project file for Xcode.`,
+                )
+              : chooseText(
+                  language,
+                  "기본 출시 설정을 모두 읽었습니다.",
+                  "Basic release settings have been read.",
+                )}
           </strong>
           <span>
             {preflight
-              ? `${preflight.okCount}/${preflight.totalCount}개 점검이 통과했습니다. 파일을 만들기 전 변경 예정 목록과 백업을 먼저 확인합니다.`
-              : "버튼을 누르면 현재 앱 폴더를 안전하게 확인한 뒤 Xcode용 프로젝트 파일을 만들고, 무엇이 바뀌었는지 쉬운 말로 보여줍니다. GitHub 계정은 필요하지 않습니다."}
+              ? chooseText(
+                  language,
+                  `${preflight.okCount}/${preflight.totalCount}개 점검이 통과했습니다. 파일을 만들기 전 변경 예정 목록과 백업을 먼저 확인합니다.`,
+                  `${preflight.okCount}/${preflight.totalCount} checks passed. Review the planned changes and backup before creating files.`,
+                )
+              : chooseText(
+                  language,
+                  "버튼을 누르면 현재 앱 폴더를 안전하게 확인한 뒤 Xcode용 프로젝트 파일을 만들고, 무엇이 바뀌었는지 쉬운 말로 보여줍니다. GitHub 계정은 필요하지 않습니다.",
+                  "Use the buttons to safely inspect the current app folder, create project files for Xcode, and see what changed in plain language. No GitHub account is required.",
+                )}
           </span>
         </div>
         <button
@@ -1031,7 +1072,7 @@ export default function App() {
             setActiveActionKey("preflight");
           }}
         >
-          미리 점검
+          {chooseText(language, "미리 점검", "Preflight")}
         </button>
         <button
           type="button"
@@ -1042,11 +1083,12 @@ export default function App() {
             void handleBuildWritePlan();
           }}
         >
-          변경 확인
+          {chooseText(language, "변경 확인", "Review changes")}
         </button>
       </section>
 
       <DevNotesModal open={showNotes} onClose={() => setShowNotes(false)} />
-    </main>
+      </main>
+    </I18nProvider>
   );
 }

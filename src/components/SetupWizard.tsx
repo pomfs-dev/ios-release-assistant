@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ArrowLeft, ArrowRight, Code2 } from "lucide-react";
 import { getEffectiveFieldAnswer, getFieldAnswerKey } from "../data/userAnswers";
+import { useI18n } from "../i18n";
 import type { FieldDefinition, StepDefinition, UserAnswerState, UserAnswerValue } from "../types";
 
 type SetupWizardProps = {
@@ -36,8 +37,10 @@ function selectedChoices(value: UserAnswerValue) {
 }
 
 function FieldRenderer({ answerKey, field, onChange, value }: FieldRendererProps) {
+  const { text } = useI18n();
+
   if (field.kind === "note") {
-    return <div className="assistant-note">{field.value}</div>;
+    return <div className="assistant-note">{text(field.value)}</div>;
   }
 
   if (field.kind === "choices") {
@@ -45,7 +48,7 @@ function FieldRenderer({ answerKey, field, onChange, value }: FieldRendererProps
 
     return (
       <div className="choice-field" data-field-label={field.label}>
-        {field.label ? <span>{field.label}</span> : null}
+        {field.label ? <span>{text(field.label)}</span> : null}
         <div className={`choice-grid ${field.multi ? "multi" : ""}`}>
           {field.choices?.map((choice) => (
             <button
@@ -66,8 +69,8 @@ function FieldRenderer({ answerKey, field, onChange, value }: FieldRendererProps
                 onChange([choice.title]);
               }}
             >
-              <div className="choice-title">{choice.title}</div>
-              <div className="choice-copy">{choice.copy}</div>
+              <div className="choice-title">{text(choice.title)}</div>
+              <div className="choice-copy">{text(choice.copy)}</div>
             </button>
           ))}
         </div>
@@ -78,11 +81,11 @@ function FieldRenderer({ answerKey, field, onChange, value }: FieldRendererProps
   if (field.kind === "textarea") {
     return (
       <label className="field" data-field-label={field.label}>
-        <span>{field.label}</span>
+        <span>{text(field.label)}</span>
         <textarea
           name={answerKey}
           onChange={(event) => onChange(event.target.value)}
-          placeholder={field.placeholder}
+          placeholder={text(field.placeholder)}
           value={textValue(value)}
         />
       </label>
@@ -92,7 +95,7 @@ function FieldRenderer({ answerKey, field, onChange, value }: FieldRendererProps
   if (field.kind === "select") {
     return (
       <label className="field" data-field-label={field.label}>
-        <span>{field.label}</span>
+        <span>{text(field.label)}</span>
         <select
           className="select"
           name={answerKey}
@@ -100,7 +103,9 @@ function FieldRenderer({ answerKey, field, onChange, value }: FieldRendererProps
           value={textValue(value)}
         >
           {field.options?.map((option) => (
-            <option key={option}>{option}</option>
+            <option key={option} value={option}>
+              {text(option)}
+            </option>
           ))}
         </select>
       </label>
@@ -109,16 +114,16 @@ function FieldRenderer({ answerKey, field, onChange, value }: FieldRendererProps
 
   return (
     <label className="field" data-field-label={field.label}>
-      <span>{field.label}</span>
+      <span>{text(field.label)}</span>
       <div className="input-row">
         <input
           className="text-input"
           name={answerKey}
           onChange={(event) => onChange(event.target.value)}
-          placeholder={field.placeholder}
+          placeholder={text(field.placeholder)}
           value={textValue(value)}
         />
-        {field.helper ? <em className="suffix">{field.helper}</em> : null}
+        {field.helper ? <em className="suffix">{text(field.helper)}</em> : null}
       </div>
     </label>
   );
@@ -137,6 +142,8 @@ export function SetupWizard({
   showSkip = true,
   step,
 }: SetupWizardProps) {
+  const { block, text } = useI18n();
+
   useEffect(() => {
     if (!focusRequest?.fieldLabel) return;
 
@@ -154,10 +161,10 @@ export function SetupWizard({
       <div className="question-top">
         <div>
           <div className="eyebrow">{step.eyebrow}</div>
-          <h1>{step.heading}</h1>
-          <div className="helper">{step.helper}</div>
+          <h1>{text(step.heading)}</h1>
+          <div className="helper">{text(step.helper)}</div>
         </div>
-        <span className="risk-badge">{step.badge}</span>
+        <span className="risk-badge">{text(step.badge)}</span>
       </div>
 
       <div className="question-body">
@@ -183,18 +190,18 @@ export function SetupWizard({
             <div className="step-preview-icon">
               <img alt="" src={step.preview.appIconDataUrl} />
               <div>
-                <span>앱 아이콘</span>
+                <span>{text("앱 아이콘")}</span>
                 <strong>{step.preview.phoneName}</strong>
               </div>
             </div>
           ) : null}
-          <div className="explain-title">이 설정이 의미하는 것</div>
-          <p>{step.explain}</p>
+          <div className="explain-title">{text("이 설정이 의미하는 것")}</div>
+          <p>{text(step.explain)}</p>
           <div className="write-targets">
             {step.targets.map(([label, value]) => (
               <div className="target-line" key={label}>
-                <span>{label}</span>
-                <code>{value}</code>
+                <span>{text(label)}</span>
+                <code>{text(value)}</code>
               </div>
             ))}
           </div>
@@ -205,15 +212,17 @@ export function SetupWizard({
         <section className="advanced">
           <div className="advanced-head">
             <div>
-              <div className="advanced-title">자세히 보기: 실제 파일에는 이렇게 기록됩니다</div>
+              <div className="advanced-title">
+                {text("자세히 보기: 실제 파일에는 이렇게 기록됩니다")}
+              </div>
               <div className="advanced-subtitle">
-                쉬운 질문에 답하면 아래처럼 Xcode용 설정 파일에 안전하게 변환됩니다.
+                {text("쉬운 질문에 답하면 아래처럼 Xcode용 설정 파일에 안전하게 변환됩니다.")}
               </div>
             </div>
             <Code2 size={18} />
           </div>
           <div className="table-wrap">
-            <pre>{step.changePreview}</pre>
+            <pre>{block(step.changePreview)}</pre>
           </div>
         </section>
       ) : null}
@@ -221,16 +230,16 @@ export function SetupWizard({
       <footer className="panel-footer">
         <button type="button" className="secondary" disabled={!canGoPrevious} onClick={onGoPrevious}>
           <ArrowLeft size={16} />
-          이전
+          {text("이전")}
         </button>
         <div>
           {showSkip ? (
             <button type="button" className="secondary" onClick={onSkip ?? onGoNext}>
-              질문 건너뛰기
+              {text("질문 건너뛰기")}
             </button>
           ) : null}
           <button type="button" className="primary" onClick={onGoNext}>
-            {nextLabel}
+            {text(nextLabel)}
             <ArrowRight size={16} />
           </button>
         </div>

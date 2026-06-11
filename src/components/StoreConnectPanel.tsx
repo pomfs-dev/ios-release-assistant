@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { getAppScanSummary } from "../data/appScanSummary";
+import { useI18n } from "../i18n";
 import type {
   AppleConnectionState,
   AppleCredentialDraft,
@@ -139,6 +140,7 @@ export function StoreConnectPanel({
   preflight,
   scanResult,
 }: StoreConnectPanelProps) {
+  const { text } = useI18n();
   const storeTasks = storeTasksFor(scanResult, preflight);
 
   useEffect(() => {
@@ -155,15 +157,15 @@ export function StoreConnectPanel({
         <div>
           <div className="eyebrow">App Store Connect</div>
           <div className="store-connect-title">
-            앱스토어에 올릴 상품 정보와 심사 정보를 같이 준비합니다.
+            {text("앱스토어에 올릴 상품 정보와 심사 정보를 같이 준비합니다.")}
           </div>
           <div className="store-connect-copy">
-            Xcode 프로젝트 파일은 앱을 빌드하기 위한 준비이고, App Store Connect 정보는
-            앱스토어 상품 페이지와 심사 제출을 위한 준비입니다. 이 도구는 둘을 따로 보지
-            않고 출시 전 체크리스트로 함께 관리합니다.
+            {text(
+              "Xcode 프로젝트 파일은 앱을 빌드하기 위한 준비이고, App Store Connect 정보는 앱스토어 상품 페이지와 심사 제출을 위한 준비입니다. 이 도구는 둘을 따로 보지 않고 출시 전 체크리스트로 함께 관리합니다.",
+            )}
           </div>
         </div>
-        <span className="mini-tag">제출 준비</span>
+        <span className="mini-tag">{text("제출 준비")}</span>
       </div>
 
       <div className="store-connect-grid">
@@ -171,10 +173,10 @@ export function StoreConnectPanel({
           <section className={`store-task ${task.state}`} key={task.title}>
             <span className="store-task-icon">{task.icon}</span>
             <div>
-              <h3>{task.title}</h3>
-              <p>{task.copy}</p>
+              <h3>{text(task.title)}</h3>
+              <p>{text(task.copy)}</p>
             </div>
-            <span className="mini-tag">{task.tag}</span>
+            <span className="mini-tag">{text(task.tag)}</span>
           </section>
         ))}
       </div>
@@ -182,10 +184,11 @@ export function StoreConnectPanel({
       <section className="asc-connect-box" aria-label="App Store Connect API Key">
         <div className="asc-connect-head">
           <div>
-            <div className="asc-connect-title">Apple 정보 세션 연결</div>
+            <div className="asc-connect-title">{text("Apple 정보 세션 연결")}</div>
             <p>
-              App Store Connect API Key로 Apple API에 실제 앱 조회 요청을 보냅니다.
-              private key는 파일에 저장하지 않고 연결 확인 후 입력칸에서 비웁니다.
+              {text(
+                "App Store Connect API Key로 Apple API에 실제 앱 조회 요청을 보냅니다. private key는 파일에 저장하지 않고 연결 확인 후 입력칸에서 비웁니다.",
+              )}
             </p>
           </div>
           <span
@@ -199,7 +202,7 @@ export function StoreConnectPanel({
                   : ""
             }`}
           >
-            {connectionStatusLabel(appleConnection)}
+            {text(connectionStatusLabel(appleConnection))}
           </span>
         </div>
 
@@ -257,13 +260,16 @@ export function StoreConnectPanel({
         </div>
 
         {appleConnection.status === "error" ? (
-          <div className="safe-note error">{appleConnection.error}</div>
+          <div className="safe-note error">{text(appleConnection.error)}</div>
         ) : null}
         {appleConnection.status === "ready" ? (
           <div className="safe-note">
-            App Store Connect API로 {appleConnection.app?.name ?? "앱"} 정보를 확인했습니다.
+            {text(
+              `App Store Connect API로 ${appleConnection.app?.name ?? "앱"} 정보를 확인했습니다.`,
+            )}
             {appleConnection.app?.bundleId ? ` Bundle ID: ${appleConnection.app.bundleId}.` : ""}
-            {" "}private key 원문은 입력칸에 남기지 않았습니다.
+            {" "}
+            {text("private key 원문은 입력칸에 남기지 않았습니다.")}
           </div>
         ) : null}
 
@@ -274,21 +280,24 @@ export function StoreConnectPanel({
             disabled={appleConnection.status === "connecting"}
             onClick={onPrepareAppleSession}
           >
-            {appleConnection.status === "connecting" ? "Apple API 확인 중..." : "Apple API로 연결 확인"}
+            {appleConnection.status === "connecting"
+              ? text("Apple API 확인 중...")
+              : text("Apple API로 연결 확인")}
           </button>
           <button type="button" className="secondary" onClick={onOpenStoreStep}>
-            제출 항목 입력
+            {text("제출 항목 입력")}
           </button>
         </div>
       </section>
 
       <div className="store-connect-footer">
         <p>
-          Apple 정보를 연결하면 App Store Connect의 앱 존재 여부를 확인합니다. 상품 페이지
-          입력과 심사 제출 값은 Review & Confirm에서 수동 처리 항목으로 분리해 확인합니다.
+          {text(
+            "Apple 정보를 연결하면 App Store Connect의 앱 존재 여부를 확인합니다. 상품 페이지 입력과 심사 제출 값은 Review & Confirm에서 수동 처리 항목으로 분리해 확인합니다.",
+          )}
         </p>
         <button type="button" className="secondary" onClick={onOpenStoreStep}>
-          App Store 제출 항목 열기
+          {text("App Store 제출 항목 열기")}
         </button>
       </div>
     </article>

@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useI18n } from "../i18n";
 
 type DevNotesModalProps = {
   open: boolean;
@@ -6,6 +7,8 @@ type DevNotesModalProps = {
 };
 
 export function DevNotesModal({ open, onClose }: DevNotesModalProps) {
+  const { text } = useI18n();
+
   if (!open) return null;
 
   return (
@@ -14,37 +17,44 @@ export function DevNotesModal({ open, onClose }: DevNotesModalProps) {
         <header>
           <div>
             <p className="eyebrow">About This Tool</p>
-            <h2 id="notesTitle">이 도구를 만드는 이유</h2>
+            <h2 id="notesTitle">이 도구를 만드는 이유 / Why This Tool Exists</h2>
             <p>
-              개발 언어를 몰라도, 바이브 코딩으로 만든 iOS 앱을 App Store 제출 준비
-              상태까지 데려가기 위한 설정 도우미입니다.
+              iOS Release Assistant는 XcodeGen에서 영감을 받아 만든 출시 준비 도우미입니다.
+              Inspired by XcodeGen, it helps people turn iOS release setup into a guided,
+              reviewable workflow.
             </p>
           </div>
-          <button type="button" className="icon-only" aria-label="닫기" onClick={onClose}>
+          <button type="button" className="icon-only" aria-label={text("닫기")} onClick={onClose}>
             <X size={20} />
           </button>
         </header>
 
         <div className="note-grid">
           <section>
-            <h3>누구를 위한 것인가요?</h3>
+            <h3>한국어 소개</h3>
             <p>
               Xcode를 처음 열어본 앱 제작자, 개발 언어를 모르지만 AI로 앱을 만든 사용자,
               그리고 App Store 제출 전에 무엇을 준비해야 하는지 알고 싶은 사람을 위한
-              도구입니다.
+              도구입니다. XcodeGen이 Xcode 프로젝트 생성을 명확하고 반복 가능한 설정으로
+              정리해준 것에서 영감을 받아, 출시 준비도 질문, 점검, 백업, 승인 단계로
+              나누었습니다.
             </p>
           </section>
           <section>
-            <h3>어떻게 동작하나요?</h3>
+            <h3>English About</h3>
             <p>
-              사용자는 쉬운 질문에 답합니다. 로컬 설치판은 앱 폴더를 읽고 백업을 만든 뒤
-              XcodeGen으로 프로젝트 파일을 생성합니다. 온라인판은 설정 파일 작성과
-              App Store Connect 점검을 돕습니다.
+              This tool is for app makers who are new to Xcode, people who built an app with AI,
+              and anyone who needs a clearer path before App Store submission. It is inspired by
+              XcodeGen's explicit, repeatable project generation model and applies that same
+              spirit to release readiness: questions, checks, backups, and explicit approvals.
             </p>
           </section>
           <section>
-            <h3>라이선스</h3>
-            <p>MIT License로 공개합니다. 이 도구는 Apple 공식 도구가 아닙니다.</p>
+            <h3>License / 라이선스</h3>
+            <p>
+              MIT License로 공개합니다. 이 도구는 Apple 공식 도구가 아닙니다.
+              Published under the MIT License. This is not an official Apple tool.
+            </p>
           </section>
         </div>
       </article>

@@ -257,6 +257,10 @@ p {
   color: white;
 }
 
+.language-toggle {
+  grid-template-columns: repeat(2, minmax(64px, 1fr));
+}
+
 .note-button {
   min-height: 38px;
   border: 1px solid var(--line-strong);

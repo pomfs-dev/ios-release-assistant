@@ -4,6 +4,8 @@
 
 이 도구는 **P.O.MFS Dev Team**에서 만들었습니다. 목표는 iOS 앱을 출시하려는 초보 개발자가 “다음에 무엇을 해야 하는지”를 몰라서 막히지 않게 하는 것입니다.
 
+Xcode 프로젝트 생성을 명확하고 반복 가능하게 만든 **XcodeGen**에서 영감을 받았습니다. iOS Release Assistant는 XcodeGen을 대체하지 않고, 출시 준비 질문과 안전 확인을 거친 뒤 필요할 때 `xcodegen generate`를 실행하도록 돕습니다.
+
 English guide is available below: [English](#english).
 
 Repository: [github.com/pomfs-dev/ios-release-assistant](https://github.com/pomfs-dev/ios-release-assistant)
@@ -189,6 +191,8 @@ iOS Release Assistant는 **P.O.MFS Dev Team의 David Kwon**이 만들었습니�
 
 P.O.MFS Dev Team은 AI 오케스트레이션, 자동화 파이프라인, 웹/앱/백엔드 제품 개발, 마케팅 테크를 결합해 P.O.MFS 플랫폼과 글로벌 아티스트 성장 시스템을 만드는 팀입니다.
 
+이 프로젝트는 XcodeGen의 선언적이고 검토 가능한 프로젝트 생성 방식에서 영감을 받았습니다. 같은 정신을 App Store 출시 준비 플로우에 적용해, 초보자도 질문, 점검, 백업, 승인 순서로 안전하게 진행할 수 있도록 만들었습니다.
+
 공식 홈페이지: [prideofmisfits.com](https://www.prideofmisfits.com)
 
 ## 라이선스
@@ -202,6 +206,8 @@ MIT License. 자세한 내용은 [LICENSE](LICENSE)를 참고하세요.
 **iOS Release Assistant** is an open-source, beginner-friendly release preparation tool for iOS apps. It turns the confusing parts of Xcode, XcodeGen, signing, entitlements, App Store Connect, review notes, screenshots, and final project generation into a step-by-step assistant.
 
 Made by **P.O.MFS Dev Team** for developers who want to ship an iOS app without guessing which App Store release checklist item comes next.
+
+It is inspired by **XcodeGen**, which made Xcode project generation explicit, repeatable, and reviewable. iOS Release Assistant does not replace XcodeGen; it guides release questions and safety checks, then helps run `xcodegen generate` only when the user explicitly approves it.
 
 
 Repository: [github.com/pomfs-dev/ios-release-assistant](https://github.com/pomfs-dev/ios-release-assistant)
@@ -382,6 +388,8 @@ For contribution checks and commit hygiene, see [CONTRIBUTING.md](CONTRIBUTING.m
 iOS Release Assistant was created by **David Kwon of P.O.MFS Dev Team**.
 
 P.O.MFS Dev Team builds the P.O.MFS platform and global artist growth systems by combining AI orchestration, automation pipelines, web/app/backend product development, and marketing technology.
+
+The project is inspired by XcodeGen's declarative and reviewable project-generation model. It applies the same spirit to App Store release preparation so beginners can move through questions, checks, backups, and approvals safely.
 
 Official website: [prideofmisfits.com](https://www.prideofmisfits.com)
 

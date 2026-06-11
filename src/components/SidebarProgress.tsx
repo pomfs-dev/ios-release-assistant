@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useI18n } from "../i18n";
 import type { PreflightCheck, ReleaseStepId, StepDefinition } from "../types";
 
 type SidebarProgressProps = {
@@ -73,6 +74,7 @@ export function SidebarProgress({
   steps,
   onSelectStep,
 }: SidebarProgressProps) {
+  const { text } = useI18n();
   const [issueScope, setIssueScope] = useState<"all" | string | null>(null);
   const hasPreflightChecks = Boolean(checks?.length ?? Object.keys(checksByStep ?? {}).length);
   const resolvedChecksByStep = useMemo(
@@ -112,19 +114,19 @@ export function SidebarProgress({
   return (
     <aside className="sidebar">
       <div className="side-head">
-        <div className="side-title">출시 준비 진행률</div>
+        <div className="side-title">{text("출시 준비 진행률")}</div>
         <div className="progress-track">
           <div className="progress-fill" style={{ width: `${progress}%` }} />
         </div>
         <div className="readiness">
-          <span>{progress}% 완료</span>
+          <span>{text(`${progress}% 완료`)}</span>
           <button
             type="button"
             className={issueScope === "all" ? "active" : ""}
             aria-pressed={issueScope === "all"}
             onClick={() => setIssueScope((currentScope) => (currentScope === "all" ? null : "all"))}
           >
-            {displayReviewCount}개 확인 필요
+            {text(`${displayReviewCount}개 확인 필요`)}
           </button>
         </div>
       </div>
@@ -132,27 +134,27 @@ export function SidebarProgress({
       {issueScope ? (
         <section className="side-issues" aria-live="polite">
           <div className="side-issues-head">
-            <strong>{issueScope === "all" ? "전체 확인 항목" : "이 단계 확인 항목"}</strong>
+            <strong>{text(issueScope === "all" ? "전체 확인 항목" : "이 단계 확인 항목")}</strong>
             <button type="button" onClick={() => setIssueScope(null)}>
-              닫기
+              {text("닫기")}
             </button>
           </div>
           {issueChecks.length > 0 ? (
             <div className="side-issue-list">
               {issueChecks.map((check) => (
                 <button type="button" key={check.id} onClick={() => handleIssueSelect(check)}>
-                  <strong>{check.title}</strong>
-                  <span>{check.copy}</span>
+                  <strong>{text(check.title)}</strong>
+                  <span>{text(check.copy)}</span>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="side-issue-empty">이 단계에서 확인할 항목이 없습니다.</div>
+            <div className="side-issue-empty">{text("이 단계에서 확인할 항목이 없습니다.")}</div>
           )}
         </section>
       ) : null}
 
-      <nav className="steps" aria-label="출시 준비 단계">
+      <nav className="steps" aria-label={text("출시 준비 단계")}>
         {steps.map((step) => {
           const currentStepChecks = stepChecksFor(resolvedChecksByStep, step.id);
           const pendingCount = pendingChecks(currentStepChecks).length;
@@ -169,8 +171,8 @@ export function SidebarProgress({
             >
               <span className="step-number">{step.index}</span>
               <span className="step-body">
-                <span className="step-name">{step.title}</span>
-                <span className="step-meta">{step.summary}</span>
+                <span className="step-name">{text(step.title)}</span>
+                <span className="step-meta">{text(step.summary)}</span>
                 <span className="step-progress-track">
                   <span style={{ width: `${stepProgress}%` }} />
                 </span>
@@ -182,7 +184,7 @@ export function SidebarProgress({
                     pendingCount === 0 && step.status === "pending" ? "pending" : ""
                   }`}
                 >
-                  {stepCountLabel(step, pendingCount)}
+                  {text(stepCountLabel(step, pendingCount))}
                 </span>
               </span>
             </button>
