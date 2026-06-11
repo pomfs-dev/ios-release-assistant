@@ -147,6 +147,8 @@ export default function App() {
     () => steps.find((step) => step.id === activeStepId) ?? steps[0],
     [activeStepId, steps],
   );
+  const activeStepIndex = steps.findIndex((step) => step.id === activeStep.id);
+  const isFinalQuestionStep = activeStepIndex === steps.length - 1;
   const completedCount = steps.filter((step) => step.status === "done").length;
   const reviewCount =
     preflight?.reviewCount ?? steps.filter((step) => step.status === "warning").length;
@@ -515,6 +517,7 @@ export default function App() {
     if (!check) {
       setActiveStepId("generate");
       setActiveActionKey("review-confirm");
+      revealReviewConfirm();
       return;
     }
 
@@ -573,6 +576,7 @@ export default function App() {
     if (activeActionKey === "preflight" || activeActionKey === "generate-project") {
       setActiveStepId("generate");
       setActiveActionKey("review-confirm");
+      revealReviewConfirm();
       return;
     }
 
@@ -587,6 +591,24 @@ export default function App() {
       setActiveStepId(nextStep.id);
       setActiveActionKey(nextStep.actionKey);
     }
+  }
+
+  function revealReviewConfirm() {
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(".action-preview")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  function handleSetupNext() {
+    if (isFinalQuestionStep) {
+      void handleBuildWritePlan();
+      return;
+    }
+
+    handleQuestionStep(1);
   }
 
   function handleOpenStoreStep() {
@@ -710,6 +732,7 @@ export default function App() {
 
     setActiveStepId("generate");
     setActiveActionKey("review-confirm");
+    revealReviewConfirm();
     setSafeWrite({
       status: "planning",
       plan: null,
@@ -865,11 +888,13 @@ export default function App() {
           <SetupWizard
             advancedMode={advancedMode}
             answers={answers}
-            canGoPrevious={steps.findIndex((step) => step.id === activeStep.id) > 0}
+            canGoPrevious={activeStepIndex > 0}
             focusRequest={focusRequest}
+            nextLabel={isFinalQuestionStep ? "Review & Confirm 열기" : "다음 설정"}
+            showSkip={!isFinalQuestionStep}
             step={activeStep}
             onAnswerChange={handleAnswerChange}
-            onGoNext={() => handleQuestionStep(1)}
+            onGoNext={handleSetupNext}
             onGoPrevious={() => handleQuestionStep(-1)}
           />
         </section>
