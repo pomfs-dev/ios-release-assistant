@@ -36,6 +36,17 @@ iOS Release Assistant는 이 과정을 질문형 플로우로 바꾸고, 실제 
 - 사용자가 명시적으로 승인한 뒤에만 `xcodegen generate`를 실행합니다.
 - App Store Connect private key는 메모리에서만 사용하고 프로젝트 파일에 저장하지 않습니다.
 
+## 기술 구성
+
+iOS Release Assistant는 iOS 앱 자체가 아니라, iOS 앱 출시 준비를 돕는 웹/로컬 도구입니다. 그래서 GitHub Languages에는 Swift가 아니라 이 도구를 구성하는 웹·로컬 브리지 코드가 표시됩니다.
+
+- TypeScript, React, Vite 기반 UI
+- 로컬 파일 접근과 XcodeGen 실행을 위한 Node.js local bridge
+- CSS 기반 인터페이스 스타일
+- Vite 기본 HTML 엔트리
+
+GitHub Languages 비율은 추적 중인 코드의 바이트 수 기준으로 계산되므로, TypeScript와 JavaScript 비율이 높게 보이는 것이 정상입니다.
+
 ## 현재 제한사항
 
 - Apple 공식 도구가 아닙니다.
@@ -233,6 +244,17 @@ iOS Release Assistant gives you a guided workflow and a final Review & Confirm g
 - Creates local backups before safe writes.
 - Runs `xcodegen generate` only after explicit confirmation.
 - Keeps App Store Connect private keys in memory only; they are not written into the project.
+
+## Technology Stack
+
+iOS Release Assistant is not an iOS app codebase. It is a web and local assistant for preparing iOS app releases, so GitHub Languages shows the tool's web UI and local bridge code instead of Swift.
+
+- TypeScript, React, and Vite for the UI
+- A local Node.js bridge for file access and XcodeGen execution
+- CSS for interface styling
+- A Vite HTML entry point
+
+GitHub Languages is calculated from tracked source-code bytes, so it is expected to see TypeScript and JavaScript as the dominant languages.
 
 ## Current Limits
 
