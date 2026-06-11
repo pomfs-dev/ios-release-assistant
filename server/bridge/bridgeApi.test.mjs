@@ -708,6 +708,7 @@ describe("bridge API foundation", () => {
     });
     const rejectedConnectPayload = await readJson(rejectedConnect);
     expect(rejectedConnect.status).toBe(403);
+    expect(rejectedConnectPayload.error).toContain("페이지를 새로고침");
     expect(rejectedConnectPayload.reason).toBe("missing-approval");
 
     const connectApproval = await createApproval(baseUrl, headers, "asc-connect");

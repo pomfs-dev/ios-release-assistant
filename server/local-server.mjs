@@ -81,6 +81,22 @@ function requestOrigin(request) {
   return typeof request.headers.origin === "string" ? request.headers.origin : null;
 }
 
+function approvalErrorMessage(reason) {
+  if (reason === "missing-approval") {
+    return "one-time approval이 필요합니다. 페이지를 새로고침한 뒤 최신 화면에서 다시 시도하세요.";
+  }
+
+  if (reason === "expired-approval") {
+    return "one-time approval이 만료됐습니다. 다시 시도해 새 approval을 발급받으세요.";
+  }
+
+  if (reason === "used-approval") {
+    return "one-time approval은 이미 사용됐습니다. 다시 시도해 새 approval을 발급받으세요.";
+  }
+
+  return "one-time approval이 유효하지 않습니다. 페이지를 새로고침한 뒤 다시 시도하세요.";
+}
+
 function validateRequiredApproval(policy, request, body, approvalManager) {
   if (policy.requiresPlanId && typeof body.planId !== "string") {
     return { ok: false, statusCode: 400, error: "plan id가 필요합니다." };
@@ -98,7 +114,7 @@ function validateRequiredApproval(policy, request, body, approvalManager) {
       return {
         ok: false,
         statusCode: 403,
-        error: "one-time approval이 필요합니다.",
+        error: approvalErrorMessage(validation.reason),
         reason: validation.reason,
       };
     }
