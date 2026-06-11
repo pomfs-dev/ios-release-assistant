@@ -8,6 +8,10 @@ English guide is available below: [English](#english).
 
 Repository: [github.com/pomfs-dev/ios-release-assistant](https://github.com/pomfs-dev/ios-release-assistant)
 
+<p align="center">
+  <img src="docs/assets/release-assistant-preview.png" alt="iOS Release Assistant preview" width="100%">
+</p>
+
 ## 왜 필요한가요?
 
 iOS 앱 출시 준비는 앱을 만드는 것만큼 복잡할 수 있습니다.
